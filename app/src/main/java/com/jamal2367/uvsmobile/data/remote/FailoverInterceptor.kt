@@ -32,6 +32,7 @@ class FailoverInterceptor(private val router: ServerRouter) : Interceptor {
                 router.markReachable(server)
                 return response
             } catch (failure: IOException) {
+                if (chain.call().isCanceled()) throw failure
                 lastFailure = failure
                 if (index == servers.lastIndex) {
                     router.markUnreachable()

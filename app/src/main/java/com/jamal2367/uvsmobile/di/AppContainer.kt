@@ -67,20 +67,34 @@ class AppContainer(private val context: Context) {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
-            .apply {
-                if (BuildConfig.DEBUG) {
-                    addInterceptor(
-                        HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
-                    )
-                }
-            }
             .build()
+    }
+
+    /**
+     * The logger goes on after whatever rewrites the request, never before it:
+     * ahead of the failover interceptor every line would read
+     * `http://localhost/...` - the placeholder Retrofit was built against -
+     * instead of the address the attempt actually went to, which is the one
+     * thing a log of a failing connection is read for.
+     */
+    private fun OkHttpClient.Builder.withDebugLogging(): OkHttpClient.Builder = apply {
+        if (BuildConfig.DEBUG) {
+            addInterceptor(
+                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
+            )
+        }
     }
 
     private val apiClient: OkHttpClient by lazy {
         baseClient.newBuilder()
             .addInterceptor(FailoverInterceptor(router))
+            .withDebugLogging()
             .build()
+    }
+
+    /** For everything that addresses a server itself, without the failover. */
+    private val directClient: OkHttpClient by lazy {
+        baseClient.newBuilder().withDebugLogging().build()
     }
 
     /**
@@ -89,7 +103,7 @@ class AppContainer(private val context: Context) {
      * while reading - an idle stream sends a keep-alive only every 30 seconds.
      */
     private val streamClient: OkHttpClient by lazy {
-        baseClient.newBuilder()
+        directClient.newBuilder()
             .readTimeout(0, TimeUnit.MILLISECONDS)
             .build()
     }
@@ -110,7 +124,7 @@ class AppContainer(private val context: Context) {
     val sseClient: SseClient by lazy { SseClient(streamClient, router, json) }
 
     /** Checks one address in isolation, for the button in the settings. */
-    val connectionTester: ConnectionTester by lazy { ConnectionTester(baseClient, json) }
+    val connectionTester: ConnectionTester by lazy { ConnectionTester(directClient, json) }
 
     private val containerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -141,7 +155,7 @@ class AppContainer(private val context: Context) {
     val imageLoader: ImageLoader by lazy {
         ImageLoader.Builder(context)
             .components {
-                add(OkHttpNetworkFetcherFactory(callFactory = { baseClient }))
+                add(OkHttpNetworkFetcherFactory(callFactory = { directClient }))
             }
             .memoryCache {
                 MemoryCache.Builder().maxSizePercent(context, 0.20).build()

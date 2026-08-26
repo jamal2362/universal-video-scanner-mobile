@@ -24,6 +24,7 @@
     <string name="error_title">Something went wrong</string>
     <string name="error_not_configured">No server configured yet. Add the address of your Universal Video Scanner in the settings.</string>
     <string name="error_unreachable">The server could not be reached.</string>
+    <string name="error_local_network_denied">This app may not reach devices on your local network. Allow local network access for Universal Video Scanner in the Android app settings.</string>
     <string name="server_active_primary">Connected to the local server</string>
     <string name="server_active_secondary">Connected to the remote server</string>
 

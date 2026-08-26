@@ -24,6 +24,7 @@
     <string name="error_title">Etwas ist schiefgelaufen</string>
     <string name="error_not_configured">Noch kein Server eingerichtet. Trage die Adresse deines Universal Video Scanners in den Einstellungen ein.</string>
     <string name="error_unreachable">Der Server war nicht erreichbar.</string>
+    <string name="error_local_network_denied">Die App darf keine Geräte im lokalen Netzwerk erreichen. Erlaube den Zugriff auf das lokale Netzwerk für Universal Video Scanner in den Android-App-Einstellungen.</string>
     <string name="server_active_primary">Mit dem lokalen Server verbunden</string>
     <string name="server_active_secondary">Mit dem externen Server verbunden</string>
 

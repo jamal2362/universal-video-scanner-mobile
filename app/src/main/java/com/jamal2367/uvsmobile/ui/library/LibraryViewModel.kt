@@ -23,8 +23,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -103,6 +105,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private val reloadRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private var loadJob: Job? = null
+    private var filterOptionsJob: Job? = null
     private var settings: AppSettings = AppSettings()
 
     /**
@@ -117,23 +120,34 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     init {
         container.settingsRepository.settings
             .onEach { updated ->
-                val wasConfigured = settings.isConfigured
-                val serversChanged = settings.primary != updated.primary ||
-                    settings.secondary != updated.secondary ||
-                    settings.connectionMode != updated.connectionMode
                 settings = updated
                 _state.value = _state.value.copy(
                     layout = updated.libraryLayout,
                     posterWidth = updated.posterWidth,
                     notConfigured = !updated.isConfigured,
                 )
-                if ((!wasConfigured && updated.isConfigured) || serversChanged) {
-                    refresh()
-                    // The first attempt runs before the settings have been read,
-                    // so the values the filter sheet offers have to be asked for
-                    // again once there is somewhere to ask.
-                    loadFilterOptions()
-                }
+            }
+            .launchIn(viewModelScope)
+
+        // The only thing that asks the server for a page - the first load
+        // included. Asking in `init` as well would put a request on the wire
+        // before the stored address has been read, only for the address to
+        // arrive a moment later and cancel it.
+        //
+        // Every keystroke in the address field is a stored settings change, so
+        // an address is half-typed several times on the way to being right -
+        // and asking `192.168.178.2` for the library costs a connect timeout
+        // that the next keystroke has already made pointless. The stored value
+        // arrives first and goes through at once; a changed one has to hold
+        // still before anything is asked of it.
+        container.settingsRepository.settings
+            .distinctUntilChangedBy { it.servers() }
+            .withIndex()
+            .debounce { (index, _) -> if (index == 0) 0L else SERVER_CHANGE_DEBOUNCE_MS }
+            .onEach { (_, updated) ->
+                settings = updated
+                refresh()
+                loadFilterOptions()
             }
             .launchIn(viewModelScope)
 
@@ -159,9 +173,6 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             .debounce(RELOAD_DEBOUNCE_MS.milliseconds)
             .onEach { syncChangedEntries() }
             .launchIn(viewModelScope)
-
-        refresh()
-        loadFilterOptions()
     }
 
     fun setSearch(term: String) {
@@ -351,7 +362,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
      * "Dolby Vision Profile 8.1" - a filter that looks broken rather than empty.
      */
     private fun loadFilterOptions() {
-        viewModelScope.launch {
+        // The counts are a second request behind every server change, and a
+        // stale one is worth no more than a stale page is.
+        filterOptionsJob?.cancel()
+        filterOptionsJob = viewModelScope.launch {
             val counted = try {
                 repository.stats()
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
@@ -396,5 +410,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     private companion object {
         const val RELOAD_DEBOUNCE_MS = 1_500L
+
+        /** How long a changed address has to stand still before it is used. */
+        const val SERVER_CHANGE_DEBOUNCE_MS = 700L
     }
 }

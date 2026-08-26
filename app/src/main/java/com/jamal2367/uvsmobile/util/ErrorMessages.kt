@@ -18,6 +18,12 @@ fun Throwable.toUserMessage(context: Context): String = when (this) {
     is ApiFailure.Unreachable -> {
         val where = serverLabel?.takeIf { it.isNotBlank() }
         when {
+            // Named before the address is: without this permission nothing on
+            // the local network answers, and every other wording would send a
+            // reader off to check a server that is not the problem.
+            !LocalNetworkAccess.isGranted(context) ->
+                context.getString(R.string.error_local_network_denied)
+
             where == null -> context.getString(R.string.error_unreachable)
             timedOut -> context.getString(R.string.api_error_timeout, where)
             else -> context.getString(R.string.api_error_network, where)
