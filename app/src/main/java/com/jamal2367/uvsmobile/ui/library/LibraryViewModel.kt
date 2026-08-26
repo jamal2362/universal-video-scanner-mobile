@@ -221,8 +221,16 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         updateQuery { it.copy(search = term) }
     }
 
+    /**
+     * Put the library in a different order.
+     *
+     * Which also settles the direction: an order has a way round it is meant
+     * to be read - newest, largest, best first - and having to turn every one
+     * of them round by hand afterwards is a second tap for the answer nobody
+     * wanted. The two buttons above the list still turn it back.
+     */
     fun setSort(sort: SortOption) {
-        updateQuery { it.copy(sort = sort) }
+        updateQuery { it.copy(sort = sort, order = sort.defaultOrder) }
     }
 
     fun setOrder(order: SortOrder) {

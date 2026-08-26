@@ -38,7 +38,7 @@
     <string name="library_filter">Filter</string>
     <string name="library_order">Reihenfolge</string>
     <string name="library_order_asc">Aufsteigend</string>
-    <string name="library_order_desc">Absteigend (Bestes zuerst)</string>
+    <string name="library_order_desc">Absteigend</string>
     <string name="library_layout_grid">Raster</string>
     <string name="library_layout_list">Liste</string>
     <string name="library_page_previous">Zurück</string>
@@ -48,7 +48,7 @@
     <!-- Sortierungen -->
     <string name="sort_filename">Dateiname</string>
     <string name="sort_tmdb_title">Titel</string>
-    <string name="sort_mtime">Änderungsdatum</string>
+    <string name="sort_recently_added">Kürzlich hinzugefügt</string>
     <string name="sort_updated_at">Zuletzt aktualisiert</string>
     <string name="sort_file_size">Dateigröße</string>
     <string name="sort_duration">Laufzeit</string>

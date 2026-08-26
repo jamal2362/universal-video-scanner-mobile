@@ -78,6 +78,10 @@ fun SortSheet(
             // and the half in force swells into a different shape as it takes
             // over. That shape change is the whole tell - it says which way
             // the library is sorted without a tick mark.
+            //
+            // One word each, held to one line: half the width of a phone is
+            // not enough for a second one, and a label that wraps makes its
+            // half of the pair taller than the other.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -88,7 +92,7 @@ fun SortSheet(
                     shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                     modifier = Modifier.weight(1f),
                 ) {
-                    Text(stringResource(R.string.library_order_asc))
+                    Text(stringResource(R.string.library_order_asc), maxLines = 1)
                 }
                 ToggleButton(
                     checked = order == SortOrder.DESC,
@@ -96,7 +100,7 @@ fun SortSheet(
                     shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                     modifier = Modifier.weight(1f),
                 ) {
-                    Text(stringResource(R.string.library_order_desc))
+                    Text(stringResource(R.string.library_order_desc), maxLines = 1)
                 }
             }
 

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The project's logo: the popcorn bucket from static/icon.svg, scaled into
-    the middle of the 108x108 adaptive-icon canvas so no launcher's mask can
-    cut a kernel off.
+    The project's logo: the popcorn bucket from static/icon.svg, drawn into the
+    middle of the 108x108 adaptive-icon canvas. Only the middle 72 of that is
+    ever shown, so the logo is sized against that rather than against the
+    canvas - otherwise a round mask takes the corners of the bucket with it.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
@@ -12,10 +13,10 @@
     android:viewportHeight="108">
 
     <group
-        android:scaleX="1.278"
-        android:scaleY="1.278"
-        android:translateX="13.11"
-        android:translateY="13.415">
+        android:scaleX="0.9485"
+        android:scaleY="0.9485"
+        android:translateX="23.649"
+        android:translateY="23.887">
         <!-- The bucket, red top to bottom like the web logo's gradient. -->
         <path android:pathData="M18,24L12,54L52,54L46,24z">
             <aapt:attr name="android:fillColor">
