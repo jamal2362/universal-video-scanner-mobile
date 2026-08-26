@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A Universal Video Scanner instance normally runs on the local network and is
+    reached over plain http on an IP address, so cleartext has to be permitted.
+
+    User-installed certificates are trusted as well, because the usual way to
+    publish such an instance to the internet is a reverse proxy with a
+    certificate from a private authority. Both are relaxations a general-purpose
+    app should not make; for one that only ever talks to a server its owner runs
+    and typed the address of themselves, they are what makes it usable at all.
+    Neither weakens the checks for a publicly issued certificate.
+-->
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <base-config
+        cleartextTrafficPermitted="true"
+        tools:ignore="InsecureBaseConfiguration">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" tools:ignore="AcceptsUserCertificates" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
