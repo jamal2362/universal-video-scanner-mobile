@@ -37,14 +37,37 @@ data class LibraryUiState(
     val query: LibraryQuery = LibraryQuery(),
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
-    val isLoadingMore: Boolean = false,
-    val endReached: Boolean = false,
     val error: String? = null,
     val notConfigured: Boolean = false,
     val filterOptions: FilterOptions = FilterOptions(),
     val layout: LibraryLayout = LibraryLayout.GRID,
     val posterWidth: Int = 320,
-)
+    /** How many entries fit on a page, or null when the whole library is one. */
+    val pageSize: Int? = null,
+    /** Which page is on screen, counted from zero. */
+    val page: Int = 0,
+) {
+    /**
+     * How many pages the matches come to.
+     *
+     * `total` counts every match, not just the window on screen, which is what
+     * makes a page number knowable at all: the server answers every request
+     * with it, so the buttons never have to ask for an empty page to find out
+     * there is nothing after this one.
+     */
+    val pageCount: Int
+        get() = pageSize?.let { size -> if (total <= 0) 1 else (total + size - 1) / size } ?: 1
+
+    /** Whether there is more than one page to move between. */
+    val isPaged: Boolean
+        get() = pageSize != null && pageCount > 1
+
+    val hasPreviousPage: Boolean
+        get() = isPaged && page > 0
+
+    val hasNextPage: Boolean
+        get() = isPaged && page < pageCount - 1
+}
 
 /**
  * The values the library actually contains, per filterable field.
@@ -109,6 +132,15 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private var settings: AppSettings = AppSettings()
 
     /**
+     * Whether a stored page size has been read yet.
+     *
+     * The first settings that arrive are not a change of mind - the first load
+     * is already on its way - and reloading for them would ask the server the
+     * same question twice.
+     */
+    private var pageSizeKnown = false
+
+    /**
      * The newest change stamp this screen has seen.
      *
      * What `updated_since` is asked with: a scan of a thousand files publishes a
@@ -120,12 +152,22 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     init {
         container.settingsRepository.settings
             .onEach { updated ->
+                val previousPageSize = settings.entriesPerPage
                 settings = updated
                 _state.value = _state.value.copy(
                     layout = updated.libraryLayout,
                     posterWidth = updated.posterWidth,
                     notConfigured = !updated.isConfigured,
+                    pageSize = updated.entriesPerPage,
                 )
+                // A different page size cuts the library up differently, so
+                // "page three" is not the same three titles it was - the only
+                // page that still means anything is the first.
+                if (pageSizeKnown && previousPageSize != updated.entriesPerPage) {
+                    _state.value = _state.value.copy(page = 0)
+                    refresh()
+                }
+                pageSizeKnown = true
             }
             .launchIn(viewModelScope)
 
@@ -179,8 +221,16 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         updateQuery { it.copy(search = term) }
     }
 
+    /**
+     * Put the library in a different order.
+     *
+     * Which also settles the direction: an order has a way round it is meant
+     * to be read - newest, largest, best first - and having to turn every one
+     * of them round by hand afterwards is a second tap for the answer nobody
+     * wanted. The two buttons above the list still turn it back.
+     */
     fun setSort(sort: SortOption) {
-        updateQuery { it.copy(sort = sort) }
+        updateQuery { it.copy(sort = sort, order = sort.defaultOrder) }
     }
 
     fun setOrder(order: SortOrder) {
@@ -212,86 +262,78 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun refresh(silent: Boolean = false) {
-        val query = _state.value.query
         loadJob?.cancel()
-        loadJob = viewModelScope.launch {
-            if (!silent) {
-                _state.value = _state.value.copy(
-                    isRefreshing = _state.value.entries.isNotEmpty(),
-                    isLoading = _state.value.entries.isEmpty(),
-                    error = null,
-                )
-            }
-            try {
-                val page = repository.library(query, settings.pageSize, offset = 0)
-                rememberSyncStamp(page.files)
-                _state.value = _state.value.copy(
-                    entries = page.files,
-                    total = page.total,
-                    isLoading = false,
-                    isRefreshing = false,
-                    isLoadingMore = false,
-                    endReached = page.files.size >= page.total,
-                    error = null,
-                    notConfigured = false,
-                )
-            } catch (failure: Throwable) {
-                if (failure is kotlinx.coroutines.CancellationException) throw failure
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    isRefreshing = false,
-                    isLoadingMore = false,
-                    error = failure.toUserMessage(getApplication()),
-                    notConfigured = failure is ApiFailure.NotConfigured,
-                )
-            }
-        }
+        loadJob = viewModelScope.launch { load(silent) }
     }
 
     /**
-     * Fetch the next window.
+     * Fetch the page that is on screen.
      *
-     * `total` counts every match before the window, so the screen knows when it
-     * has them all without asking for an empty page to find out.
+     * One request, or two in the one case worth a second: the library can
+     * shrink under a reader standing on its last page - a scan that cleared out
+     * what is gone, say - and rather than an empty screen with a page number
+     * nobody can leave, the last page that still exists is fetched instead.
      */
-    fun loadMore() {
-        val current = _state.value
-        if (current.isLoadingMore || current.endReached || current.isLoading) return
-        if (current.entries.isEmpty()) return
+    private suspend fun load(silent: Boolean) {
+        val query = _state.value.query
+        val size = settings.entriesPerPage
+        // Without pages there is only ever one, so a stale page number from a
+        // moment ago cannot send the request past the end of the library.
+        var page = if (size == null) 0 else _state.value.page
 
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoadingMore = true)
-            try {
-                val page = repository.library(
-                    query = current.query,
-                    limit = settings.pageSize,
-                    offset = current.entries.size,
-                )
-                // A scan running underneath can shift what lands in a window,
-                // so a page may repeat an entry the list already holds. Two rows
-                // with the same key is a crash, and one title twice is wrong
-                // anyway.
-                val known = current.entries.mapTo(HashSet()) { it.path }
-                val fresh = page.files.filterNot { it.path in known }
-                val combined = current.entries + fresh
-                rememberSyncStamp(page.files)
-                _state.value = _state.value.copy(
-                    entries = combined,
-                    total = page.total,
-                    isLoadingMore = false,
-                    // An empty page also ends it: the library may have shrunk
-                    // between two requests, and asking forever would not help.
-                    endReached = page.files.isEmpty() || combined.size >= page.total,
-                )
-            } catch (failure: Throwable) {
-                if (failure is kotlinx.coroutines.CancellationException) throw failure
-                _state.value = _state.value.copy(
-                    isLoadingMore = false,
-                    error = failure.toUserMessage(getApplication()),
-                )
+        if (!silent) {
+            _state.value = _state.value.copy(
+                isRefreshing = _state.value.entries.isNotEmpty(),
+                isLoading = _state.value.entries.isEmpty(),
+                error = null,
+            )
+        }
+        try {
+            var result = repository.library(query, size, offset = page * (size ?: 0))
+            val lastPage = lastPageFor(result.total, size)
+            if (page > lastPage) {
+                page = lastPage
+                result = repository.library(query, size, offset = page * (size ?: 0))
             }
+            rememberSyncStamp(result.files)
+            _state.value = _state.value.copy(
+                entries = result.files,
+                total = result.total,
+                pageSize = size,
+                page = page,
+                isLoading = false,
+                isRefreshing = false,
+                error = null,
+                notConfigured = false,
+            )
+        } catch (failure: Throwable) {
+            if (failure is kotlinx.coroutines.CancellationException) throw failure
+            _state.value = _state.value.copy(
+                isLoading = false,
+                isRefreshing = false,
+                error = failure.toUserMessage(getApplication()),
+                notConfigured = failure is ApiFailure.NotConfigured,
+            )
         }
     }
+
+    /** The last page that holds anything, given how many matches there are. */
+    private fun lastPageFor(total: Int, size: Int?): Int =
+        if (size == null || total <= 0) 0 else (total - 1) / size
+
+    /** Move to a page, as the buttons under the library do. */
+    fun goToPage(target: Int) {
+        val current = _state.value
+        if (!current.isPaged) return
+        val page = target.coerceIn(0, current.pageCount - 1)
+        if (page == current.page) return
+        _state.value = current.copy(page = page)
+        refresh()
+    }
+
+    fun nextPage() = goToPage(_state.value.page + 1)
+
+    fun previousPage() = goToPage(_state.value.page - 1)
 
     /**
      * Bring the rows on screen up to date without fetching them again.
@@ -345,7 +387,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private fun updateQuery(transform: (LibraryQuery) -> LibraryQuery) {
         val updated = transform(_state.value.query)
         if (updated == _state.value.query) return
-        _state.value = _state.value.copy(query = updated, endReached = false)
+        // A different question has a different first page.
+        _state.value = _state.value.copy(query = updated, page = 0)
         refresh()
     }
 

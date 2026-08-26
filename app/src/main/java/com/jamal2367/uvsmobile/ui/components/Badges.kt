@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +19,7 @@ import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVision
 import com.jamal2367.uvsmobile.ui.theme.BadgeHdr10
 import com.jamal2367.uvsmobile.ui.theme.BadgeHdr10Plus
 import com.jamal2367.uvsmobile.ui.theme.BadgeSdr
+import com.jamal2367.uvsmobile.ui.theme.PillShape
 
 /** A small, quiet chip - the kind that sits under a title without shouting. */
 @Composable
@@ -39,16 +39,16 @@ fun MetaChip(
         modifier = modifier
             .background(
                 color = if (outlined) Color.Transparent else container,
-                shape = RoundedCornerShape(6.dp),
+                shape = PillShape,
             )
             .then(
                 if (outlined) {
-                    Modifier.border(1.dp, content.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                    Modifier.border(1.dp, content.copy(alpha = 0.4f), PillShape)
                 } else {
                     Modifier
                 }
             )
-            .padding(horizontal = 6.dp, vertical = 3.dp),
+            .padding(horizontal = 8.dp, vertical = 3.dp),
     )
 }
 

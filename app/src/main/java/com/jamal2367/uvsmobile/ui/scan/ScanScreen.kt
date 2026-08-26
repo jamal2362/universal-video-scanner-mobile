@@ -1,4 +1,4 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 
 package com.jamal2367.uvsmobile.ui.scan
 
@@ -24,7 +24,7 @@ import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Radar
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -360,7 +360,7 @@ private fun DangerCard(isClearing: Boolean, onClear: () -> Unit) {
         )
         OutlinedButton(onClick = onClear, enabled = !isClearing) {
             if (isClearing) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                LoadingIndicator(modifier = Modifier.size(22.dp))
             } else {
                 Icon(
                     Icons.Outlined.DeleteForever,

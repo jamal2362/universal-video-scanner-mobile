@@ -1,26 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A film frame with a scanning beam across it. -->
+<!--
+    The project's logo: the popcorn bucket from static/icon.svg, drawn into the
+    middle of the 108x108 adaptive-icon canvas. Only the middle 72 of that is
+    ever shown, so the logo is sized against that rather than against the
+    canvas - otherwise a round mask takes the corners of the bucket with it.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <path
-        android:fillColor="#7DD3FC"
-        android:pathData="M30,32h48a6,6 0,0 1,6 6v32a6,6 0,0 1,-6 6h-48a6,6 0,0 1,-6 -6v-32a6,6 0,0 1,6 -6zM30,38v32h48v-32z" />
+    <group
+        android:scaleX="0.9485"
+        android:scaleY="0.9485"
+        android:translateX="23.649"
+        android:translateY="23.887">
+        <!-- The bucket, red top to bottom like the web logo's gradient. -->
+        <path android:pathData="M18,24L12,54L52,54L46,24z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="32"
+                    android:startY="24"
+                    android:endX="32"
+                    android:endY="54"
+                    android:type="linear">
+                    <item android:offset="0" android:color="#E74C3C" />
+                    <item android:offset="1" android:color="#C0392B" />
+                </gradient>
+            </aapt:attr>
+        </path>
 
-    <group>
+        <!-- Its white stripes. -->
         <path
-            android:fillColor="#38BDF8"
-            android:pathData="M33,41h6v5h-6zM33,50h6v5h-6zM33,59h6v5h-6zM69,41h6v5h-6zM69,50h6v5h-6zM69,59h6v5h-6z" />
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.9"
+            android:pathData="M20,24L14.8,48L19.6,48L24.8,24z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.9"
+            android:pathData="M30,24L24.8,48L29.6,48L34.8,24z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.9"
+            android:pathData="M40,24L34.8,48L39.6,48L44.8,24z" />
+
+        <!-- The shadow the bucket stands in. -->
+        <path
+            android:fillColor="#000000"
+            android:fillAlpha="0.2"
+            android:pathData="M12,54L52,54L50,56L14,56z" />
+
+        <!-- The popcorn. -->
+        <path
+            android:fillColor="#FFE5B4"
+            android:pathData="M15.5,20a4.5,4.5 0 1,0 9.0,0a4.5,4.5 0 1,0 -9.0,0z" />
+        <path
+            android:fillColor="#FFD89B"
+            android:pathData="M13.5,18a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFF5E1"
+            android:pathData="M20,18a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+        <path
+            android:fillColor="#FFE5B4"
+            android:pathData="M17,15a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+        <path
+            android:fillColor="#FFE5B4"
+            android:pathData="M24,18a4,4 0 1,0 8,0a4,4 0 1,0 -8,0z" />
+        <path
+            android:fillColor="#FFD89B"
+            android:pathData="M21.5,16a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFF5E1"
+            android:pathData="M27.8,16a3.2,3.2 0 1,0 6.4,0a3.2,3.2 0 1,0 -6.4,0z" />
+        <path
+            android:fillColor="#FFE5B4"
+            android:pathData="M24.5,13a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFD89B"
+            android:pathData="M25.5,21a2.5,2.5 0 1,0 5.0,0a2.5,2.5 0 1,0 -5.0,0z" />
+        <path
+            android:fillColor="#FFE5B4"
+            android:pathData="M31.5,16a4.5,4.5 0 1,0 9.0,0a4.5,4.5 0 1,0 -9.0,0z" />
+        <path
+            android:fillColor="#FFD89B"
+            android:pathData="M29.5,14a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFF5E1"
+            android:pathData="M35.5,14a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFE5B4"
+            android:pathData="M32.5,11a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFD89B"
+            android:pathData="M33,19a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+        <path
+            android:fillColor="#FFF5E1"
+            android:pathData="M30.5,18a2.5,2.5 0 1,0 5.0,0a2.5,2.5 0 1,0 -5.0,0z" />
+        <path
+            android:fillColor="#FFE5B4"
+            android:pathData="M40,18a4,4 0 1,0 8,0a4,4 0 1,0 -8,0z" />
+        <path
+            android:fillColor="#FFD89B"
+            android:pathData="M38,16a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+        <path
+            android:fillColor="#FFF5E1"
+            android:pathData="M43.5,17a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFE5B4"
+            android:pathData="M41,14a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+
+        <!-- Depth where the kernels meet the bucket. -->
+        <path
+            android:fillColor="#000000"
+            android:fillAlpha="0.1"
+            android:pathData="M18,21a2,2 0 1,0 4,0a2,2 0 1,0 -4,0z" />
+        <path
+            android:fillColor="#000000"
+            android:fillAlpha="0.1"
+            android:pathData="M26,19a2,2 0 1,0 4,0a2,2 0 1,0 -4,0z" />
+        <path
+            android:fillColor="#000000"
+            android:fillAlpha="0.1"
+            android:pathData="M33.5,18a2.5,2.5 0 1,0 5.0,0a2.5,2.5 0 1,0 -5.0,0z" />
+        <path
+            android:fillColor="#000000"
+            android:fillAlpha="0.1"
+            android:pathData="M42,19a2,2 0 1,0 4,0a2,2 0 1,0 -4,0z" />
     </group>
-
-    <path
-        android:fillColor="#F8FAFC"
-        android:pathData="M44,44h20v20h-20z" />
-
-    <path
-        android:fillColor="#0EA5E9"
-        android:pathData="M22,52h64v4h-64z" />
 </vector>

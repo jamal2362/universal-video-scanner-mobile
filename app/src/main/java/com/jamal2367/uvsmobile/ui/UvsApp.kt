@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.WideNavigationRail
+import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -52,7 +52,12 @@ fun UvsApp(container: AppContainer, settings: AppSettings) {
 
     // Wide enough for a rail: a tablet or an unfolded phone should not waste a
     // whole edge on a bar the height of a thumb.
-    val useRail = LocalConfiguration.current.screenWidthDp >= 720
+    //
+    // Measured on the shorter edge, so it is the device that decides and not
+    // the way it is being held: a phone turned sideways is over 720dp wide and
+    // would have swung its bar to the side, which is the one place a thumb
+    // holding the phone cannot comfortably get to.
+    val useRail = LocalConfiguration.current.smallestScreenWidthDp >= 600
 
     CompositionLocalProvider(LocalPosterServer provides posterServer) {
         if (useRail) {
@@ -89,11 +94,14 @@ private fun UvsNavigationBar(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destinations = remember { TopLevelDestination.entries }
 
-    NavigationBar {
+    // Material's short bar rather than the tall one: 64dp with the label under
+    // the icon, instead of 80dp with a strip of nothing above it. The system's
+    // own gesture bar is added underneath rather than eaten into.
+    ShortNavigationBar {
         destinations.forEach { destination ->
             val selected = backStackEntry?.destination?.hierarchy
                 ?.any { it.route == destination.route } == true
-            NavigationBarItem(
+            ShortNavigationBarItem(
                 selected = selected,
                 onClick = { navController.switchTo(destination) },
                 icon = {
@@ -102,8 +110,12 @@ private fun UvsNavigationBar(navController: NavHostController) {
                         contentDescription = null,
                     )
                 },
-                label = { Text(stringResource(destination.labelRes)) },
-                alwaysShowLabel = false,
+                label = {
+                    Text(
+                        text = stringResource(destination.tabLabelRes),
+                        maxLines = 1,
+                    )
+                },
             )
         }
     }
@@ -114,11 +126,11 @@ private fun UvsNavigationRail(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destinations = remember { TopLevelDestination.entries }
 
-    NavigationRail {
+    WideNavigationRail {
         destinations.forEach { destination ->
             val selected = backStackEntry?.destination?.hierarchy
                 ?.any { it.route == destination.route } == true
-            NavigationRailItem(
+            WideNavigationRailItem(
                 selected = selected,
                 onClick = { navController.switchTo(destination) },
                 icon = {
@@ -127,7 +139,13 @@ private fun UvsNavigationRail(navController: NavHostController) {
                         contentDescription = null,
                     )
                 },
-                label = { Text(stringResource(destination.labelRes)) },
+                label = {
+                    Text(
+                        text = stringResource(destination.tabLabelRes),
+                        maxLines = 1,
+                    )
+                },
+                railExpanded = false,
             )
         }
     }

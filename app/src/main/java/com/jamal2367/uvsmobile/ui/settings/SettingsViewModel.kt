@@ -42,9 +42,11 @@ data class SettingsUiState(
 /**
  * The settings, including the two addresses the app can reach an instance at.
  *
- * Every change is written through to storage immediately - there is no save
- * button to forget - and the router picks it up from there, so the next request
- * already goes to the new address.
+ * Everything but an address is written through the moment it is changed - a
+ * theme has no half-way state worth protecting anyone from. An address does:
+ * a host name is wrong for as long as it is being typed, and every keystroke
+ * saved would be an address the app tries to reach. That one is edited on the
+ * screen and stored when the reader says so.
  */
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -71,29 +73,42 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             .launchIn(viewModelScope)
     }
 
-    fun updateServer(slot: ServerSlot, transform: (ServerConfig) -> ServerConfig) {
+    /** Store an address, which is also what points the app at it. */
+    fun saveServer(slot: ServerSlot, config: ServerConfig) {
         val current = _state.value.settings
-        val updated = transform(if (slot == ServerSlot.PRIMARY) current.primary else current.secondary)
 
         // The stored copy is the one that matters, but the screen would flicker
         // back to the old text for a frame while the write lands - so the state
         // is moved first and the write follows.
         _state.value = _state.value.copy(
             settings = if (slot == ServerSlot.PRIMARY) {
-                current.copy(primary = updated)
+                current.copy(primary = config)
             } else {
-                current.copy(secondary = updated)
+                current.copy(secondary = config)
             },
-            primaryTest = if (slot == ServerSlot.PRIMARY) TestState.Idle else _state.value.primaryTest,
-            secondaryTest = if (slot == ServerSlot.SECONDARY) TestState.Idle else _state.value.secondaryTest,
         )
 
         viewModelScope.launch {
             when (slot) {
-                ServerSlot.PRIMARY -> repository.setPrimary(updated)
-                ServerSlot.SECONDARY -> repository.setSecondary(updated)
+                ServerSlot.PRIMARY -> repository.setPrimary(config)
+                ServerSlot.SECONDARY -> repository.setSecondary(config)
             }
         }
+    }
+
+    /**
+     * Forget how the last test went.
+     *
+     * Called as soon as an address is edited: "reachable" said about the
+     * address that was there a moment ago is worse than saying nothing.
+     */
+    fun clearTest(slot: ServerSlot) {
+        if (currentTest(slot) != TestState.Idle) setTest(slot, TestState.Idle)
+    }
+
+    private fun currentTest(slot: ServerSlot): TestState = when (slot) {
+        ServerSlot.PRIMARY -> _state.value.primaryTest
+        ServerSlot.SECONDARY -> _state.value.secondaryTest
     }
 
     fun setConnectionMode(mode: ConnectionMode) {
@@ -120,10 +135,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { repository.setLiveUpdates(enabled) }
     }
 
-    fun testConnection(slot: ServerSlot) {
-        val settings = _state.value.settings
-        val server = if (slot == ServerSlot.PRIMARY) settings.primary else settings.secondary
-
+    /**
+     * Try an address as it stands on the screen.
+     *
+     * The one being typed, not the one that is stored: testing before saving is
+     * the whole point of the button.
+     */
+    fun testConnection(slot: ServerSlot, server: ServerConfig) {
         if (server.host.isBlank()) {
             setTest(slot, TestState.Failed(getApplication<Application>().getString(R.string.settings_invalid_host)))
             return

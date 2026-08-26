@@ -2,7 +2,9 @@ package com.jamal2367.uvsmobile.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -66,23 +68,41 @@ private val DarkColors = darkColorScheme(
 )
 
 /**
- * The app's Material 3 theme.
+ * Whether the app is painting dark right now.
+ *
+ * The theme is not the only thing that has to know: the status bar draws its
+ * clock and icons in a colour the platform picks, and it picks it from the
+ * system's setting rather than the app's - so a phone left on dark with the
+ * app set to light would put white icons on a white bar. Both read this.
+ */
+@Composable
+fun isDarkTheme(themeMode: ThemeMode): Boolean = when (themeMode) {
+    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    ThemeMode.LIGHT -> false
+    ThemeMode.DARK -> true
+}
+
+/**
+ * The app's Material 3 theme, in its expressive form.
+ *
+ * Expressive rather than the baseline Android 12 shipped with. Two things
+ * follow from that and neither can be had by hand: every component animates on
+ * the expressive motion scheme, which overshoots and settles rather than easing
+ * to a stop, and the shape scale in [UvsShapes] is the rounder one - the
+ * near-square corners of the baseline scale are what date a screen at a glance.
  *
  * Takes its palette from the wallpaper where the platform offers one and the
  * reader left that switched on; everything else falls back to the fixed scheme
  * above, so the app looks like itself on older devices too.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun UvsTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val dark = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
+    val dark = isDarkTheme(themeMode)
 
     val context = LocalContext.current
     val colorScheme = when {
@@ -93,8 +113,10 @@ fun UvsTheme(
         else -> LightColors
     }
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
+        motionScheme = MotionScheme.expressive(),
+        shapes = UvsShapes,
         typography = UvsTypography,
         content = content,
     )

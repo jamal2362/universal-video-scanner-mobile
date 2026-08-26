@@ -76,44 +76,66 @@ enum class SortField(val key: String) {
  * `sort` may name several fields separated by commas: it sorts by the first and
  * settles ties with the next, so "HDR format + audio track" is one parameter
  * rather than a second pass on the phone.
+ *
+ * Each carries the direction it is normally wanted in. Nobody asks for a
+ * library by rating and means the worst film first, and "recently added" read
+ * upwards is the oldest file on the disk - so picking an order sets its
+ * direction too, and the two buttons above the list turn it round again for
+ * the times that is not what was meant.
  */
-enum class SortOption(val fields: List<SortField>, @StringRes val labelRes: Int) {
+enum class SortOption(
+    val fields: List<SortField>,
+    @StringRes val labelRes: Int,
+    val defaultOrder: SortOrder = SortOrder.ASC,
+) {
     FILENAME(listOf(SortField.FILENAME), R.string.sort_filename),
     TITLE(listOf(SortField.TMDB_TITLE), R.string.sort_tmdb_title),
-    YEAR(listOf(SortField.TMDB_YEAR), R.string.sort_tmdb_year),
-    MODIFIED(listOf(SortField.MTIME), R.string.sort_mtime),
-    UPDATED(listOf(SortField.UPDATED_AT), R.string.sort_updated_at),
-    FILE_SIZE(listOf(SortField.FILE_SIZE), R.string.sort_file_size),
-    DURATION(listOf(SortField.DURATION), R.string.sort_duration),
-    RESOLUTION(listOf(SortField.RESOLUTION), R.string.sort_resolution),
-    VIDEO_CODEC(listOf(SortField.VIDEO_CODEC), R.string.sort_video_codec),
-    VIDEO_BITRATE(listOf(SortField.VIDEO_BITRATE), R.string.sort_video_bitrate),
-    AUDIO_BITRATE(listOf(SortField.AUDIO_BITRATE), R.string.sort_audio_bitrate),
-    HDR_FORMAT(listOf(SortField.HDR_FORMAT), R.string.sort_hdr_format),
-    AUDIO_CODEC(listOf(SortField.AUDIO_CODEC), R.string.sort_audio_codec),
-    CM_VERSION(listOf(SortField.DV_CM_VERSION), R.string.sort_dv_cm_version),
+
+    /**
+     * What landed in the library last.
+     *
+     * The file's own modification time, because the scanner keeps no "added"
+     * stamp of its own: `updated_at` is written again every time a rating or a
+     * poster is filled in later, which would answer a different question.
+     */
+    RECENTLY_ADDED(listOf(SortField.MTIME), R.string.sort_recently_added, SortOrder.DESC),
+    UPDATED(listOf(SortField.UPDATED_AT), R.string.sort_updated_at, SortOrder.DESC),
+    YEAR(listOf(SortField.TMDB_YEAR), R.string.sort_tmdb_year, SortOrder.DESC),
+    FILE_SIZE(listOf(SortField.FILE_SIZE), R.string.sort_file_size, SortOrder.DESC),
+    DURATION(listOf(SortField.DURATION), R.string.sort_duration, SortOrder.DESC),
+    RESOLUTION(listOf(SortField.RESOLUTION), R.string.sort_resolution, SortOrder.DESC),
+    VIDEO_CODEC(listOf(SortField.VIDEO_CODEC), R.string.sort_video_codec, SortOrder.DESC),
+    VIDEO_BITRATE(listOf(SortField.VIDEO_BITRATE), R.string.sort_video_bitrate, SortOrder.DESC),
+    AUDIO_BITRATE(listOf(SortField.AUDIO_BITRATE), R.string.sort_audio_bitrate, SortOrder.DESC),
+    HDR_FORMAT(listOf(SortField.HDR_FORMAT), R.string.sort_hdr_format, SortOrder.DESC),
+    AUDIO_CODEC(listOf(SortField.AUDIO_CODEC), R.string.sort_audio_codec, SortOrder.DESC),
+    CM_VERSION(listOf(SortField.DV_CM_VERSION), R.string.sort_dv_cm_version, SortOrder.DESC),
     HDR_AND_AUDIO(
         listOf(SortField.HDR_FORMAT, SortField.AUDIO_CODEC),
         R.string.sort_hdr_audio_codec,
+        SortOrder.DESC,
     ),
     HDR_AND_VIDEO_BITRATE(
         listOf(SortField.HDR_FORMAT, SortField.VIDEO_BITRATE),
         R.string.sort_hdr_video_bitrate,
+        SortOrder.DESC,
     ),
     HDR_AND_AUDIO_BITRATE(
         listOf(SortField.HDR_FORMAT, SortField.AUDIO_BITRATE),
         R.string.sort_hdr_audio_bitrate,
+        SortOrder.DESC,
     ),
     AUDIO_AND_BITRATE(
         listOf(SortField.AUDIO_CODEC, SortField.AUDIO_BITRATE),
         R.string.sort_audio_codec_bitrate,
+        SortOrder.DESC,
     ),
-    TMDB_RATING(listOf(SortField.TMDB_RATING), R.string.sort_tmdb_rating),
-    IMDB_RATING(listOf(SortField.IMDB_RATING), R.string.sort_imdb_rating),
-    RT_RATING(listOf(SortField.RT_RATING), R.string.sort_rt_rating),
-    RT_AUDIENCE(listOf(SortField.RT_AUDIENCE), R.string.sort_rt_audience),
-    TRAKT_RATING(listOf(SortField.TRAKT_RATING), R.string.sort_trakt_rating),
-    METACRITIC(listOf(SortField.METACRITIC), R.string.sort_metacritic);
+    TMDB_RATING(listOf(SortField.TMDB_RATING), R.string.sort_tmdb_rating, SortOrder.DESC),
+    IMDB_RATING(listOf(SortField.IMDB_RATING), R.string.sort_imdb_rating, SortOrder.DESC),
+    RT_RATING(listOf(SortField.RT_RATING), R.string.sort_rt_rating, SortOrder.DESC),
+    RT_AUDIENCE(listOf(SortField.RT_AUDIENCE), R.string.sort_rt_audience, SortOrder.DESC),
+    TRAKT_RATING(listOf(SortField.TRAKT_RATING), R.string.sort_trakt_rating, SortOrder.DESC),
+    METACRITIC(listOf(SortField.METACRITIC), R.string.sort_metacritic, SortOrder.DESC);
 
     val queryValue: String get() = fields.joinToString(",") { it.key }
 }

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The same logo as a silhouette, for the themed icon a launcher tints itself.
+    Only the outline carries here - stripes and shading in one colour would be
+    invisible anyway - so bucket and kernels are drawn solid.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:scaleX="0.9485"
+        android:scaleY="0.9485"
+        android:translateX="23.649"
+        android:translateY="23.887">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M18,24L12,54L52,54L46,24z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M15.5,20a4.5,4.5 0 1,0 9.0,0a4.5,4.5 0 1,0 -9.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M13.5,18a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M20,18a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M17,15a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M24,18a4,4 0 1,0 8,0a4,4 0 1,0 -8,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M21.5,16a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M27.8,16a3.2,3.2 0 1,0 6.4,0a3.2,3.2 0 1,0 -6.4,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M24.5,13a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M25.5,21a2.5,2.5 0 1,0 5.0,0a2.5,2.5 0 1,0 -5.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M31.5,16a4.5,4.5 0 1,0 9.0,0a4.5,4.5 0 1,0 -9.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M29.5,14a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M35.5,14a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M32.5,11a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M33,19a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M30.5,18a2.5,2.5 0 1,0 5.0,0a2.5,2.5 0 1,0 -5.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M40,18a4,4 0 1,0 8,0a4,4 0 1,0 -8,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M38,16a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M43.5,17a3.5,3.5 0 1,0 7.0,0a3.5,3.5 0 1,0 -7.0,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M41,14a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
+    </group>
+</vector>

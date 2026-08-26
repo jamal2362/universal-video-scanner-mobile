@@ -5,11 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.core.view.WindowCompat
 import com.jamal2367.uvsmobile.data.prefs.AppSettings
 import com.jamal2367.uvsmobile.ui.UvsApp
 import com.jamal2367.uvsmobile.ui.theme.UvsTheme
+import com.jamal2367.uvsmobile.ui.theme.isDarkTheme
 import com.jamal2367.uvsmobile.util.LocalNetworkAccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -51,6 +54,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings by settingsFlow.collectAsState()
             val decided by networkAccessDecided.collectAsState()
+
+            // The bars are transparent and the app paints underneath them, so
+            // the clock and the icons up there belong to whatever the app is
+            // showing - not to whatever the system is set to. Left to the
+            // platform, a phone on dark with the app on light gets white icons
+            // on a white bar, and the time disappears.
+            val dark = isDarkTheme(settings.themeMode)
+            DisposableEffect(dark) {
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.isAppearanceLightStatusBars = !dark
+                controller.isAppearanceLightNavigationBars = !dark
+                onDispose {}
+            }
+
             UvsTheme(
                 themeMode = settings.themeMode,
                 dynamicColor = settings.dynamicColor,

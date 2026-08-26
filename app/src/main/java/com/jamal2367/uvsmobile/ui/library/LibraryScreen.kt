@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -19,31 +22,31 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.SortByAlpha
 import androidx.compose.material.icons.outlined.VideoLibrary
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +54,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -60,6 +64,7 @@ import com.jamal2367.uvsmobile.data.prefs.LibraryLayout
 import com.jamal2367.uvsmobile.ui.components.EmptyState
 import com.jamal2367.uvsmobile.ui.components.ErrorState
 import com.jamal2367.uvsmobile.ui.components.LoadingState
+import com.jamal2367.uvsmobile.ui.components.SearchField
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -67,7 +72,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * The library.
  *
  * Everything on this screen is a question put to the server: the search box, the
- * chips, the order, and the next page when the list runs out. Nothing is
+ * chips, the order, and which page of the answer to hand over. Nothing is
  * filtered on the phone - a library of thousands would have to travel here first
  * for that, which is exactly what the API's query parameters exist to avoid.
  */
@@ -83,6 +88,11 @@ fun LibraryScreen(
     var showSort by rememberSaveable { mutableStateOf(false) }
     var showFilter by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf(state.query.search) }
+
+    // The title gets out of the way as the library is scrolled and comes back
+    // on the way up: on a phone held in one hand it is a strip of nothing
+    // between the clock and the first poster.
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     // A keystroke is not a question: the search waits for a pause before it
     // asks, so typing eight letters is one request rather than eight.
@@ -101,7 +111,28 @@ fun LibraryScreen(
         }
     }
 
+    // A new page starts at its top, title and all - it is a different set of
+    // titles, not a continuation of the one that was just scrolled through.
+    LaunchedEffect(state.page) {
+        scrollBehavior.state.heightOffset = 0f
+    }
+
+    // Everything above the first poster travels with it rather than sitting on
+    // top of the list: on a phone the search box and the chips would otherwise
+    // take a third of the screen away from the library itself.
+    val header: @Composable (Modifier) -> Unit = { modifier ->
+        LibraryHeader(
+            state = state,
+            searchText = searchText,
+            onSearchChange = { searchText = it },
+            onSort = { showSort = true },
+            onFilter = { showFilter = true },
+            modifier = modifier,
+        )
+    }
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -134,79 +165,53 @@ fun LibraryScreen(
                         )
                     }
                 },
+                scrollBehavior = scrollBehavior,
             )
         },
+        bottomBar = {
+            // Only when the library was actually cut into pages - at "all"
+            // there is nothing to page to.
+            if (state.isPaged) {
+                PageBar(
+                    page = state.page,
+                    pageCount = state.pageCount,
+                    hasPrevious = state.hasPreviousPage,
+                    hasNext = state.hasNextPage,
+                    onPrevious = viewModel::previousPage,
+                    onNext = viewModel::nextPage,
+                )
+            }
+        },
     ) { padding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { viewModel.refresh() },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                placeholder = { Text(stringResource(R.string.library_search_hint)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (searchText.isNotEmpty()) {
-                        IconButton(onClick = { searchText = "" }) {
-                            Icon(
-                                Icons.Outlined.Close,
-                                contentDescription = stringResource(R.string.action_clear),
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
-
-            QueryChips(
-                sortLabel = stringResource(state.query.sort.labelRes),
-                activeFilters = state.query.activeFilterCount,
-                onSort = { showSort = true },
-                onFilter = { showFilter = true },
-            )
-
-            if (state.entries.isNotEmpty()) {
-                Text(
-                    text = pluralStringResource(
-                        R.plurals.library_count,
-                        state.total,
-                        state.entries.size,
-                        state.total,
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            when {
+                state.notConfigured -> EmptyState(
+                    icon = Icons.Outlined.VideoLibrary,
+                    title = stringResource(R.string.error_not_configured),
+                    actionLabel = stringResource(R.string.action_open_settings),
+                    onAction = onOpenSettings,
                 )
-            }
 
-            PullToRefreshBox(
-                isRefreshing = state.isRefreshing,
-                onRefresh = { viewModel.refresh() },
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                when {
-                    state.notConfigured -> EmptyState(
-                        icon = Icons.Outlined.VideoLibrary,
-                        title = stringResource(R.string.error_not_configured),
-                        actionLabel = stringResource(R.string.action_open_settings),
-                        onAction = onOpenSettings,
-                    )
+                state.isLoading && state.entries.isEmpty() -> LoadingState()
 
-                    state.isLoading && state.entries.isEmpty() -> LoadingState()
+                state.error != null && state.entries.isEmpty() -> ErrorState(
+                    message = state.error.orEmpty(),
+                    onRetry = { viewModel.refresh() },
+                    actionLabel = stringResource(R.string.action_open_settings),
+                    onAction = onOpenSettings,
+                )
 
-                    state.error != null && state.entries.isEmpty() -> ErrorState(
-                        message = state.error.orEmpty(),
-                        onRetry = { viewModel.refresh() },
-                        actionLabel = stringResource(R.string.action_open_settings),
-                        onAction = onOpenSettings,
-                    )
-
-                    state.entries.isEmpty() -> EmptyState(
+                // Nothing to show, but the search box has to stay within reach:
+                // it is usually what emptied the screen in the first place.
+                state.entries.isEmpty() -> Column(Modifier.fillMaxSize()) {
+                    header(Modifier.padding(horizontal = 16.dp))
+                    EmptyState(
                         icon = Icons.Outlined.VideoLibrary,
                         title = stringResource(
                             if (state.query.hasAnyNarrowing) {
@@ -229,19 +234,19 @@ fun LibraryScreen(
                             null
                         },
                     )
-
-                    state.layout == LibraryLayout.GRID -> LibraryGrid(
-                        state = state,
-                        onOpenEntry = onOpenEntry,
-                        onLoadMore = viewModel::loadMore,
-                    )
-
-                    else -> LibraryList(
-                        state = state,
-                        onOpenEntry = onOpenEntry,
-                        onLoadMore = viewModel::loadMore,
-                    )
                 }
+
+                state.layout == LibraryLayout.GRID -> LibraryGrid(
+                    state = state,
+                    onOpenEntry = onOpenEntry,
+                    header = { header(Modifier) },
+                )
+
+                else -> LibraryList(
+                    state = state,
+                    onOpenEntry = onOpenEntry,
+                    header = { header(Modifier) },
+                )
             }
         }
     }
@@ -274,6 +279,46 @@ fun LibraryScreen(
     }
 }
 
+/** The search box, the two chips and the count - everything above the titles. */
+@Composable
+private fun LibraryHeader(
+    state: LibraryUiState,
+    searchText: String,
+    onSearchChange: (String) -> Unit,
+    onSort: () -> Unit,
+    onFilter: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        SearchField(
+            value = searchText,
+            onValueChange = onSearchChange,
+            placeholder = stringResource(R.string.library_search_hint),
+        )
+
+        QueryChips(
+            sortLabel = stringResource(state.query.sort.labelRes),
+            activeFilters = state.query.activeFilterCount,
+            onSort = onSort,
+            onFilter = onFilter,
+        )
+
+        if (state.entries.isNotEmpty()) {
+            Text(
+                text = pluralStringResource(
+                    R.plurals.library_count,
+                    state.total,
+                    state.entries.size,
+                    state.total,
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+            )
+        }
+    }
+}
+
 @Composable
 private fun QueryChips(
     sortLabel: String,
@@ -284,7 +329,7 @@ private fun QueryChips(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -317,25 +362,77 @@ private fun QueryChips(
     }
 }
 
+/**
+ * One page back, one page on, and which page this is.
+ *
+ * Only there when the library was asked for in pages: at "all entries" the
+ * whole answer is already on screen and there is nowhere to page to.
+ */
+@Composable
+private fun PageBar(
+    page: Int,
+    pageCount: Int,
+    hasPrevious: Boolean,
+    hasNext: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+) {
+    Surface(tonalElevation = 3.dp) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                // Nothing when the shell above has already padded for the
+                // system's gesture bar, the gesture bar's height when it has
+                // not - which is the case beside a navigation rail.
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FilledTonalButton(onClick = onPrevious, enabled = hasPrevious) {
+                Icon(
+                    Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = stringResource(R.string.library_page_previous),
+                    modifier = Modifier.padding(start = 6.dp),
+                )
+            }
+            Text(
+                text = stringResource(R.string.library_page_of, page + 1, pageCount),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+            FilledTonalButton(onClick = onNext, enabled = hasNext) {
+                Text(
+                    text = stringResource(R.string.library_page_next),
+                    modifier = Modifier.padding(end = 6.dp),
+                )
+                Icon(
+                    Icons.AutoMirrored.Outlined.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun LibraryGrid(
     state: LibraryUiState,
     onOpenEntry: (String) -> Unit,
-    onLoadMore: () -> Unit,
+    header: @Composable () -> Unit,
 ) {
     val gridState = rememberLazyGridState()
 
-    // Ask for the next window a screenful before the list runs out, so scrolling
-    // never stops at the bottom waiting for it.
-    val shouldLoadMore by remember {
-        derivedStateOf {
-            val last = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            last >= state.entries.size - LOAD_MORE_THRESHOLD
-        }
-    }
-    LaunchedEffect(shouldLoadMore, state.entries.size) {
-        if (shouldLoadMore) onLoadMore()
-    }
+    // A page turned is a different set of titles: it starts at the top rather
+    // than wherever the last one was left.
+    LaunchedEffect(state.page) { gridState.scrollToItem(0) }
 
     LazyVerticalGrid(
         state = gridState,
@@ -345,17 +442,13 @@ private fun LibraryGrid(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
+        item(key = HEADER_KEY, span = { GridItemSpan(maxLineSpan) }) { header() }
         items(state.entries, key = { it.path }) { entry ->
             EntryGridCard(
                 entry = entry,
                 posterWidth = state.posterWidth,
                 onClick = { onOpenEntry(entry.path) },
             )
-        }
-        if (state.isLoadingMore) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                LoadingFooter()
-            }
         }
     }
 }
@@ -364,19 +457,11 @@ private fun LibraryGrid(
 private fun LibraryList(
     state: LibraryUiState,
     onOpenEntry: (String) -> Unit,
-    onLoadMore: () -> Unit,
+    header: @Composable () -> Unit,
 ) {
     val listState = rememberLazyListState()
 
-    val shouldLoadMore by remember {
-        derivedStateOf {
-            val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            last >= state.entries.size - LOAD_MORE_THRESHOLD
-        }
-    }
-    LaunchedEffect(shouldLoadMore, state.entries.size) {
-        if (shouldLoadMore) onLoadMore()
-    }
+    LaunchedEffect(state.page) { listState.scrollToItem(0) }
 
     LazyColumn(
         state = listState,
@@ -384,6 +469,7 @@ private fun LibraryList(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
+        item(key = HEADER_KEY) { header() }
         items(state.entries, key = { it.path }) { entry ->
             EntryListRow(
                 entry = entry,
@@ -391,30 +477,10 @@ private fun LibraryList(
                 onClick = { onOpenEntry(entry.path) },
             )
         }
-        if (state.isLoadingMore) {
-            item { LoadingFooter() }
-        }
-    }
-}
-
-@Composable
-private fun LoadingFooter() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-        Text(
-            text = stringResource(R.string.library_loading_more),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 10.dp),
-        )
     }
 }
 
 private const val SEARCH_DEBOUNCE_MS = 350L
-private const val LOAD_MORE_THRESHOLD = 8
+
+/** Keeps the header apart from the entries, whose keys are their paths. */
+private const val HEADER_KEY = "library-header"

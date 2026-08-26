@@ -1,4 +1,4 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 
 package com.jamal2367.uvsmobile.ui.detail
 
@@ -32,7 +32,7 @@ import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -142,11 +142,10 @@ fun DetailScreen(
                 },
                 actions = {
                     if (state.isWorking) {
-                        CircularProgressIndicator(
+                        LoadingIndicator(
                             modifier = Modifier
                                 .padding(end = 16.dp)
-                                .size(22.dp),
-                            strokeWidth = 2.dp,
+                                .size(28.dp),
                         )
                     }
                 },
@@ -402,7 +401,7 @@ private fun DetailHeader(entry: LibraryEntry, posterWidth: Int) {
                 modifier = Modifier
                     .width(130.dp)
                     .height(195.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(18.dp)),
             )
             Column(
                 modifier = Modifier
