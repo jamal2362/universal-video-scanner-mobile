@@ -1,8 +1,9 @@
 package com.jamal2367.uvsmobile.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -58,20 +59,27 @@ fun UvsApp(container: AppContainer, settings: AppSettings) {
         if (useRail) {
             Row(Modifier.fillMaxSize()) {
                 UvsNavigationRail(navController)
-                Scaffold { padding ->
-                    UvsNavHost(
-                        navController = navController,
-                        modifier = Modifier.padding(padding),
-                    )
-                }
+                UvsNavHost(
+                    navController = navController,
+                    modifier = Modifier.weight(1f),
+                )
             }
         } else {
             Scaffold(
+                // This shell holds no top bar, so it must not claim the status
+                // bar either: each screen has a top bar of its own that pads
+                // for it and draws underneath it. Left at the default, the
+                // inset would be counted twice and every screen would start a
+                // status bar's height too low.
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 bottomBar = { UvsNavigationBar(navController) },
             ) { padding ->
-                Box(Modifier.padding(padding)) {
-                    UvsNavHost(navController = navController)
-                }
+                UvsNavHost(
+                    navController = navController,
+                    modifier = Modifier
+                        .padding(padding)
+                        .consumeWindowInsets(padding),
+                )
             }
         }
     }
