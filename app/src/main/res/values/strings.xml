@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Video Scanner</string>
+
+    <!-- Navigation -->
+    <string name="nav_library">Library</string>
+    <string name="nav_stats">Statistics</string>
+    <string name="nav_files">Files</string>
+    <string name="nav_scan">Scan</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Common actions -->
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_back">Back</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_open_settings">Open settings</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+
+    <!-- States -->
+    <string name="state_unknown">Unknown</string>
+    <string name="state_none">—</string>
+    <string name="error_title">Something went wrong</string>
+    <string name="error_not_configured">No server configured yet. Add the address of your Universal Video Scanner in the settings.</string>
+    <string name="error_unreachable">The server could not be reached.</string>
+    <string name="server_active_primary">Connected to the local server</string>
+    <string name="server_active_secondary">Connected to the remote server</string>
+
+    <!-- Library -->
+    <string name="library_search_hint">Title, codec, resolution…</string>
+    <string name="library_empty">The library is empty. Start a scan to fill it.</string>
+    <string name="library_no_results">No entry matches this search.</string>
+    <string name="library_sort">Sort</string>
+    <string name="library_filter">Filter</string>
+    <string name="library_order">Order</string>
+    <string name="library_order_asc">Ascending</string>
+    <string name="library_order_desc">Descending (best first)</string>
+    <string name="library_layout_grid">Grid</string>
+    <string name="library_layout_list">List</string>
+    <string name="library_loading_more">Loading more…</string>
+
+    <!-- Sort orders -->
+    <string name="sort_filename">File name</string>
+    <string name="sort_tmdb_title">Title</string>
+    <string name="sort_mtime">Date modified</string>
+    <string name="sort_updated_at">Last updated</string>
+    <string name="sort_file_size">File size</string>
+    <string name="sort_duration">Duration</string>
+    <string name="sort_resolution">Resolution</string>
+    <string name="sort_video_codec">Video codec</string>
+    <string name="sort_video_bitrate">Video bitrate</string>
+    <string name="sort_audio_bitrate">Audio bitrate</string>
+    <string name="sort_hdr_format">HDR format</string>
+    <string name="sort_audio_codec">Audio track</string>
+    <string name="sort_dv_cm_version">CM version</string>
+    <string name="sort_tmdb_year">Year</string>
+    <string name="sort_tmdb_rating">TMDB rating</string>
+    <string name="sort_imdb_rating">IMDb rating</string>
+    <string name="sort_rt_rating">Rotten Tomatoes</string>
+    <string name="sort_rt_audience">RT audience</string>
+    <string name="sort_trakt_rating">Trakt rating</string>
+    <string name="sort_metacritic">Metacritic</string>
+    <string name="sort_hdr_audio_codec">HDR format + audio track</string>
+    <string name="sort_hdr_video_bitrate">HDR format + video bitrate</string>
+    <string name="sort_hdr_audio_bitrate">HDR format + audio bitrate</string>
+    <string name="sort_audio_codec_bitrate">Audio track + audio bitrate</string>
+
+    <!-- Filters -->
+    <string name="filter_title">Filter library</string>
+    <string name="filter_exact">Exact match</string>
+    <string name="filter_ranges">Ranges</string>
+    <string name="filter_min">from</string>
+    <string name="filter_max">to</string>
+    <string name="filter_any">Any</string>
+    <string name="filter_only_top250">IMDb Top 250 only</string>
+    <string name="filter_reset_all">Reset all filters</string>
+    <string name="filter_recent_days">Modified in the last … days</string>
+
+    <!-- Entry fields -->
+    <string name="field_filename">File name</string>
+    <string name="field_path">Path</string>
+    <string name="field_hdr_format">HDR format</string>
+    <string name="field_hdr_detail">HDR detail</string>
+    <string name="field_el_type">Enhancement layer</string>
+    <string name="field_resolution">Resolution</string>
+    <string name="field_resolution_class">Resolution class</string>
+    <string name="field_video_codec">Video codec</string>
+    <string name="field_video_codec_profile">Codec profile</string>
+    <string name="field_video_encoder">Encoder</string>
+    <string name="field_audio_codec">Audio codec</string>
+    <string name="field_duration">Duration</string>
+    <string name="field_video_bitrate">Video bitrate</string>
+    <string name="field_audio_bitrate">Audio bitrate</string>
+    <string name="field_file_size">File size</string>
+    <string name="field_mtime">Modified</string>
+    <string name="field_updated_at">Updated</string>
+    <string name="field_dv_cm_version">CM version</string>
+    <string name="field_tmdb_id">TMDB ID</string>
+    <string name="field_imdb_id">IMDb ID</string>
+    <string name="field_tmdb_year">Year</string>
+    <string name="field_directors">Directed by</string>
+    <string name="field_cast">Cast</string>
+
+    <!-- Detail sections -->
+    <string name="detail_overview">Overview</string>
+    <string name="detail_video">Video</string>
+    <string name="detail_audio">Audio</string>
+    <string name="detail_hdr_metadata">HDR metadata</string>
+    <string name="detail_ratings">Ratings</string>
+    <string name="detail_people">Cast &amp; crew</string>
+    <string name="detail_file">File</string>
+    <string name="detail_rescan">Rescan</string>
+    <string name="detail_rescan_running">Rescanning…</string>
+    <string name="detail_rescan_done">Entry re-read</string>
+    <string name="detail_delete_title">Remove from library?</string>
+    <string name="detail_delete_message">The entry and its cached poster are removed from the library. The video file itself stays untouched.</string>
+    <string name="detail_deleted">Entry removed</string>
+    <string name="detail_not_found">The library holds no entry for this path.</string>
+
+    <!-- HDR metadata labels -->
+    <string name="hdr_hdr10_mdl_max">Mastering display, max</string>
+    <string name="hdr_hdr10_mdl_min">Mastering display, min</string>
+    <string name="hdr_hdr10_max_cll">MaxCLL</string>
+    <string name="hdr_hdr10_max_fall">MaxFALL</string>
+    <string name="hdr_rpu_mdl_max">RPU mastering display, max</string>
+    <string name="hdr_rpu_mdl_min">RPU mastering display, min</string>
+    <string name="hdr_rpu_max_cll">RPU MaxCLL (L6)</string>
+    <string name="hdr_rpu_max_fall">RPU MaxFALL (L6)</string>
+    <string name="hdr_l5_crop">L5 active area</string>
+
+    <!-- Ratings -->
+    <string name="rating_imdb">IMDb</string>
+    <string name="rating_tmdb">TMDB</string>
+    <string name="rating_rt">Rotten Tomatoes</string>
+    <string name="rating_rt_audience">RT audience</string>
+    <string name="rating_trakt">Trakt</string>
+    <string name="rating_metacritic">Metacritic</string>
+    <string name="rating_top250">IMDb Top 250: #%1$d</string>
+    <string name="rating_none">No ratings available for this title.</string>
+
+    <!-- Statistics -->
+    <string name="stats_total_entries">Entries</string>
+    <string name="stats_total_size">Total size</string>
+    <string name="stats_hdr_formats">HDR formats</string>
+    <string name="stats_resolution_classes">Resolution classes</string>
+    <string name="stats_resolutions">Frame sizes</string>
+    <string name="stats_video_codecs">Video codecs</string>
+    <string name="stats_audio_codecs">Audio codecs</string>
+    <string name="stats_empty">Nothing has been scanned yet.</string>
+    <string name="stats_show_all">Show all (%1$d)</string>
+    <string name="stats_show_less">Show less</string>
+    <string name="stats_tap_to_filter">Tap a row to open it in the library</string>
+
+    <!-- Files -->
+    <string name="files_title">Media directory</string>
+    <string name="files_scanned">Scanned</string>
+    <string name="files_unscanned">Not scanned</string>
+    <string name="files_empty">No video files were found in the media directory.</string>
+    <string name="files_scan_selected">Scan selection (%1$d)</string>
+    <string name="files_select_all_unscanned">Select everything unscanned</string>
+    <string name="files_selection_clear">Clear selection</string>
+    <string name="files_filter_all">All</string>
+    <string name="files_search_hint">Search file name</string>
+    <string name="files_scan_now">Scan this file now</string>
+    <string name="files_scan_one_done">%1$s scanned</string>
+
+    <!-- Scan -->
+    <string name="scan_state_idle">Idle</string>
+    <string name="scan_state_scanning">Scanning</string>
+    <string name="scan_state_done">Finished</string>
+    <string name="scan_state_cancelled">Cancelled</string>
+    <string name="scan_state_error">Failed</string>
+    <string name="scan_start_full">Scan everything new</string>
+    <string name="scan_cancel">Stop scan</string>
+    <string name="scan_cancelling">Stopping…</string>
+    <string name="scan_started">Scan started</string>
+    <string name="scan_progress">%1$d of %2$d</string>
+    <string name="scan_current_file">Current file</string>
+    <string name="scan_summary_new">New: %1$d</string>
+    <string name="scan_summary_removed">Removed: %1$d</string>
+    <string name="scan_summary_total">In the library: %1$d</string>
+    <string name="scan_live_connected">Live updates active</string>
+    <string name="scan_live_connecting">Connecting to live updates…</string>
+    <string name="scan_live_offline">No live connection</string>
+    <string name="scan_activity">Activity</string>
+    <string name="scan_activity_empty">Nothing has happened since the app was opened.</string>
+    <string name="scan_event_updated">Entry updated</string>
+    <string name="scan_event_deleted">File removed</string>
+    <string name="scan_danger_zone">Danger zone</string>
+    <string name="scan_clear_db">Empty library</string>
+    <string name="scan_clear_db_title">Empty the library?</string>
+    <string name="scan_clear_db_message">Every entry and every cached poster is deleted. The video files themselves stay untouched, and a new scan can rebuild the library.</string>
+    <string name="scan_clear_db_done">Library emptied</string>
+
+    <!-- Settings -->
+    <string name="settings_servers_hint">Two addresses can be stored: one for the local network and one for access from outside. Which of them is used is decided by the connection mode.</string>
+    <string name="settings_server_primary">Local server</string>
+    <string name="settings_server_secondary">Remote server</string>
+    <string name="settings_server_enabled">Use this server</string>
+    <string name="settings_host">Host or IP address</string>
+    <string name="settings_port">Port</string>
+    <string name="settings_https">Use HTTPS</string>
+    <string name="settings_token">API token</string>
+    <string name="settings_token_hint">The API_TOKEN of your instance. Without it the API answers 503.</string>
+    <string name="settings_token_show">Show token</string>
+    <string name="settings_token_hide">Hide token</string>
+    <string name="settings_test">Test connection</string>
+    <string name="settings_test_running">Testing…</string>
+    <string name="settings_test_ok">Reachable — API %1$s</string>
+    <string name="settings_mode">Connection mode</string>
+    <string name="settings_mode_auto">Automatic</string>
+    <string name="settings_mode_auto_desc">Try the local server first, fall back to the remote one</string>
+    <string name="settings_mode_primary">Local only</string>
+    <string name="settings_mode_primary_desc">Only ever use the local address</string>
+    <string name="settings_mode_secondary">Remote only</string>
+    <string name="settings_mode_secondary_desc">Only ever use the remote address</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">Follow system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Dynamic colours</string>
+    <string name="settings_dynamic_color_desc">Take the palette from the wallpaper (Android 12 and newer)</string>
+    <string name="settings_library">Library</string>
+    <string name="settings_poster_width">Poster width</string>
+    <string name="settings_poster_width_desc">Which resized copy the server is asked for</string>
+    <string name="settings_page_size">Entries per page</string>
+    <string name="settings_page_size_desc">How many entries are fetched at a time</string>
+    <string name="settings_live_updates">Live updates</string>
+    <string name="settings_live_updates_desc">Follow scan progress and changes over the event stream</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_version">App version</string>
+    <string name="settings_about_api">API</string>
+    <string name="settings_about_project">Project</string>
+    <string name="settings_invalid_host">Enter a host name or IP address.</string>
+    <string name="settings_invalid_port">The port has to be between 1 and 65535.</string>
+
+    <!-- Error codes reported by the API -->
+    <string name="api_error_disabled">The API is switched off on the server — set API_TOKEN there.</string>
+    <string name="api_error_unauthorized">The API token is missing or wrong.</string>
+    <string name="api_error_not_found">The server does not know this endpoint. Is it a Universal Video Scanner?</string>
+    <string name="api_error_scan_running">A scan is already running.</string>
+    <string name="api_error_no_scan">No scan is running.</string>
+    <string name="api_error_network">No connection to %1$s.</string>
+    <string name="api_error_timeout">%1$s did not answer in time.</string>
+    <string name="api_error_parse">The answer could not be read.</string>
+    <!-- Counts that read differently for one -->
+    <plurals name="library_count">
+        <item quantity="one">%1$d of %2$d entry</item>
+        <item quantity="other">%1$d of %2$d entries</item>
+    </plurals>
+    <plurals name="files_count">
+        <item quantity="one">%1$d file, %2$d of them not scanned</item>
+        <item quantity="other">%1$d files, %2$d of them not scanned</item>
+    </plurals>
+    <plurals name="files_queued">
+        <item quantity="one">%1$d file queued, %2$d skipped</item>
+        <item quantity="other">%1$d files queued, %2$d skipped</item>
+    </plurals>
+</resources>
