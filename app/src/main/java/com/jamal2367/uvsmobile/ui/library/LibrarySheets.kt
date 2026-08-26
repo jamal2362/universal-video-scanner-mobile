@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -18,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,7 +51,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * Every order the web interface offers, ranked the same way by the server -
  * including its combined modes, which travel as one comma-separated `sort`.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SortSheet(
     current: SortOption,
@@ -70,17 +73,31 @@ fun SortSheet(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = order == SortOrder.ASC,
-                    onClick = { onOrder(SortOrder.ASC) },
-                    label = { Text(stringResource(R.string.library_order_asc)) },
-                )
-                FilterChip(
-                    selected = order == SortOrder.DESC,
-                    onClick = { onOrder(SortOrder.DESC) },
-                    label = { Text(stringResource(R.string.library_order_desc)) },
-                )
+            // Two halves of one choice, so they are drawn as one connected
+            // pair: the outer ends are rounded, the join between them is not,
+            // and the half in force swells into a different shape as it takes
+            // over. That shape change is the whole tell - it says which way
+            // the library is sorted without a tick mark.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                ToggleButton(
+                    checked = order == SortOrder.ASC,
+                    onCheckedChange = { onOrder(SortOrder.ASC) },
+                    shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.library_order_asc))
+                }
+                ToggleButton(
+                    checked = order == SortOrder.DESC,
+                    onCheckedChange = { onOrder(SortOrder.DESC) },
+                    shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.library_order_desc))
+                }
             }
 
             Text(

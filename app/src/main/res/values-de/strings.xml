@@ -8,6 +8,8 @@
     <string name="nav_files">Dateien</string>
     <string name="nav_scan">Scan</string>
     <string name="nav_settings">Einstellungen</string>
+    <!-- The same, as it has to fit under an icon in the navigation bar. -->
+    <string name="nav_settings_tab">Optionen</string>
 
     <!-- Allgemeine Aktionen -->
     <string name="action_retry">Erneut versuchen</string>

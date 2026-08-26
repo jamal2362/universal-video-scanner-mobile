@@ -22,8 +22,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.SortByAlpha
@@ -35,16 +33,15 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -67,6 +64,7 @@ import com.jamal2367.uvsmobile.data.prefs.LibraryLayout
 import com.jamal2367.uvsmobile.ui.components.EmptyState
 import com.jamal2367.uvsmobile.ui.components.ErrorState
 import com.jamal2367.uvsmobile.ui.components.LoadingState
+import com.jamal2367.uvsmobile.ui.components.SearchField
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -292,23 +290,10 @@ private fun LibraryHeader(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(
+        SearchField(
             value = searchText,
             onValueChange = onSearchChange,
-            placeholder = { Text(stringResource(R.string.library_search_hint)) },
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-            trailingIcon = {
-                if (searchText.isNotEmpty()) {
-                    IconButton(onClick = { onSearchChange("") }) {
-                        Icon(
-                            Icons.Outlined.Close,
-                            contentDescription = stringResource(R.string.action_clear),
-                        )
-                    }
-                }
-            },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            placeholder = stringResource(R.string.library_search_hint),
         )
 
         QueryChips(
@@ -400,11 +385,11 @@ private fun PageBar(
                 // system's gesture bar, the gesture bar's height when it has
                 // not - which is the case beside a navigation rail.
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 4.dp, vertical = 4.dp),
+                .padding(horizontal = 8.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onPrevious, enabled = hasPrevious) {
+            FilledTonalButton(onClick = onPrevious, enabled = hasPrevious) {
                 Icon(
                     Icons.AutoMirrored.Outlined.ArrowBack,
                     contentDescription = null,
@@ -417,10 +402,12 @@ private fun PageBar(
             }
             Text(
                 text = stringResource(R.string.library_page_of, page + 1, pageCount),
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier.padding(horizontal = 8.dp),
             )
-            TextButton(onClick = onNext, enabled = hasNext) {
+            FilledTonalButton(onClick = onNext, enabled = hasNext) {
                 Text(
                     text = stringResource(R.string.library_page_next),
                     modifier = Modifier.padding(end = 6.dp),

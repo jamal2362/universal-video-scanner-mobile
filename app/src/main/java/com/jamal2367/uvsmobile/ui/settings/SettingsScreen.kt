@@ -1,4 +1,4 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 
 package com.jamal2367.uvsmobile.ui.settings
 
@@ -21,7 +21,7 @@ import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -326,10 +326,7 @@ private fun TestResult(test: TestState, modifier: Modifier = Modifier) {
     when (test) {
         TestState.Idle -> Unit
 
-        TestState.Running -> CircularProgressIndicator(
-            modifier = modifier.size(18.dp),
-            strokeWidth = 2.dp,
-        )
+        TestState.Running -> LoadingIndicator(modifier = modifier.size(26.dp))
 
         is TestState.Ok -> Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
             Icon(

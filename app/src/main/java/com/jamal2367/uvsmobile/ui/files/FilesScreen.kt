@@ -1,4 +1,4 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 
 package com.jamal2367.uvsmobile.ui.files
 
@@ -19,7 +19,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -27,7 +27,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -51,6 +50,7 @@ import com.jamal2367.uvsmobile.R
 import com.jamal2367.uvsmobile.ui.components.EmptyState
 import com.jamal2367.uvsmobile.ui.components.ErrorState
 import com.jamal2367.uvsmobile.ui.components.LoadingState
+import com.jamal2367.uvsmobile.ui.components.SearchField
 import androidx.compose.ui.platform.LocalResources
 
 /**
@@ -130,25 +130,11 @@ fun FilesScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            OutlinedTextField(
+            SearchField(
                 value = state.search,
                 onValueChange = viewModel::setSearch,
-                placeholder = { Text(stringResource(R.string.files_search_hint)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (state.search.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.setSearch("") }) {
-                            Icon(
-                                Icons.Outlined.Close,
-                                contentDescription = stringResource(R.string.action_clear),
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                placeholder = stringResource(R.string.files_search_hint),
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
 
             Row(
@@ -268,9 +254,8 @@ fun FilesScreen(
                                 trailingContent = {
                                     if (!file.scanned) {
                                         if (state.scanningPath == file.path) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(20.dp),
-                                                strokeWidth = 2.dp,
+                                            LoadingIndicator(
+                                                modifier = Modifier.size(26.dp),
                                             )
                                         } else {
                                             IconButton(

@@ -44,7 +44,7 @@ fun EntryGridCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(2f / 3f)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(18.dp)),
             )
             entry.top250Rank?.let { rank ->
                 MetaChip(
@@ -112,7 +112,7 @@ fun EntryListRow(
                 modifier = Modifier
                     .width(60.dp)
                     .height(90.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(RoundedCornerShape(14.dp)),
             )
 
             Column(

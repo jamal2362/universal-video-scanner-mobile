@@ -46,16 +46,31 @@ object Routes {
     }.getOrDefault("")
 }
 
-/** The five places the bar switches between. */
+/**
+ * The five places the bar switches between.
+ *
+ * [labelRes] names the screen; [tabLabelRes] is what fits under an icon when
+ * five of them share the width of a phone. They are the same word wherever the
+ * screen's own name is short enough, which in English is everywhere.
+ */
 enum class TopLevelDestination(
     val route: String,
     @StringRes val labelRes: Int,
     val selectedIcon: ImageVector,
     val icon: ImageVector,
+    @StringRes val tabLabelRes: Int = labelRes,
 ) {
     LIBRARY(Routes.LIBRARY, R.string.nav_library, Icons.Filled.VideoLibrary, Icons.Outlined.VideoLibrary),
     STATS(Routes.STATS, R.string.nav_stats, Icons.Filled.Insights, Icons.Outlined.Insights),
     FILES(Routes.FILES, R.string.nav_files, Icons.Filled.Folder, Icons.Outlined.Folder),
     SCAN(Routes.SCAN, R.string.nav_scan, Icons.Filled.Radar, Icons.Outlined.Radar),
-    SETTINGS(Routes.SETTINGS, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
+    SETTINGS(
+        Routes.SETTINGS,
+        R.string.nav_settings,
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings,
+        // "Einstellungen" under an icon a fifth of a phone wide wraps onto a
+        // second line and takes the whole bar with it.
+        tabLabelRes = R.string.nav_settings_tab,
+    ),
 }

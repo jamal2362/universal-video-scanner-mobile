@@ -2,19 +2,16 @@ package com.jamal2367.uvsmobile.ui
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.WideNavigationRail
+import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -24,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -98,16 +94,14 @@ private fun UvsNavigationBar(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destinations = remember { TopLevelDestination.entries }
 
-    // Shorter than the 80dp Material leaves room for: with the label only
-    // under the tab in use, the rest is empty space taken off five screens.
-    // The system's own gesture bar is added underneath rather than eaten into.
-    val systemBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-
-    NavigationBar(modifier = Modifier.height(NavigationBarHeight + systemBottom)) {
+    // Material's short bar rather than the tall one: 64dp with the label under
+    // the icon, instead of 80dp with a strip of nothing above it. The system's
+    // own gesture bar is added underneath rather than eaten into.
+    ShortNavigationBar {
         destinations.forEach { destination ->
             val selected = backStackEntry?.destination?.hierarchy
                 ?.any { it.route == destination.route } == true
-            NavigationBarItem(
+            ShortNavigationBarItem(
                 selected = selected,
                 onClick = { navController.switchTo(destination) },
                 icon = {
@@ -116,8 +110,12 @@ private fun UvsNavigationBar(navController: NavHostController) {
                         contentDescription = null,
                     )
                 },
-                label = { Text(stringResource(destination.labelRes)) },
-                alwaysShowLabel = false,
+                label = {
+                    Text(
+                        text = stringResource(destination.tabLabelRes),
+                        maxLines = 1,
+                    )
+                },
             )
         }
     }
@@ -128,11 +126,11 @@ private fun UvsNavigationRail(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destinations = remember { TopLevelDestination.entries }
 
-    NavigationRail {
+    WideNavigationRail {
         destinations.forEach { destination ->
             val selected = backStackEntry?.destination?.hierarchy
                 ?.any { it.route == destination.route } == true
-            NavigationRailItem(
+            WideNavigationRailItem(
                 selected = selected,
                 onClick = { navController.switchTo(destination) },
                 icon = {
@@ -141,7 +139,13 @@ private fun UvsNavigationRail(navController: NavHostController) {
                         contentDescription = null,
                     )
                 },
-                label = { Text(stringResource(destination.labelRes)) },
+                label = {
+                    Text(
+                        text = stringResource(destination.tabLabelRes),
+                        maxLines = 1,
+                    )
+                },
+                railExpanded = false,
             )
         }
     }
@@ -158,6 +162,3 @@ private fun NavHostController.switchTo(destination: TopLevelDestination) {
         restoreState = true
     }
 }
-
-/** How tall the bar itself is, before the system's gesture bar underneath it. */
-private val NavigationBarHeight = 64.dp
