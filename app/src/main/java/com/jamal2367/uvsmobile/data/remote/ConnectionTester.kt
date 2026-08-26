@@ -43,7 +43,7 @@ class ConnectionTester(
 
         try {
             client.newCall(request).execute().use { response ->
-                val body = response.body?.string().orEmpty()
+                val body = response.body.string()
                 if (!response.isSuccessful) {
                     val parsed = runCatching {
                         json.decodeFromString(ApiErrorBody.serializer(), body)

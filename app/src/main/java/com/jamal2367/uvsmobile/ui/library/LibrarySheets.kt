@@ -40,6 +40,7 @@ import com.jamal2367.uvsmobile.data.model.RangeValue
 import com.jamal2367.uvsmobile.data.model.SortOption
 import com.jamal2367.uvsmobile.data.model.SortOrder
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The order to put the library in.
@@ -267,7 +268,7 @@ private fun FreeTextFilter(label: String, value: String, onValue: (String?) -> U
     // A keystroke is not a question: the library is asked once the typing stops.
     LaunchedEffect(text) {
         if (text != value) {
-            delay(INPUT_DEBOUNCE_MS)
+            delay(INPUT_DEBOUNCE_MS.milliseconds)
             onValue(text.ifBlank { null })
         }
     }
@@ -305,7 +306,7 @@ private fun RangeFilterRow(
     LaunchedEffect(minText, maxText) {
         val typed = RangeValue(min = minText.toStored(unit), max = maxText.toStored(unit))
         if (typed != value) {
-            delay(INPUT_DEBOUNCE_MS)
+            delay(INPUT_DEBOUNCE_MS.milliseconds)
             onValue(typed)
         }
     }

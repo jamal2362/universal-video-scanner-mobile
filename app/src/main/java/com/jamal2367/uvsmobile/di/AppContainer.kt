@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit
  *
  * Small enough that a framework would be more machinery than the whole network
  * layer: everything is created once, lazily, and handed to the view models by
- * the factories in [com.jamal2367.uvsmobile.ui.ViewModelFactories].
+ * the factories in com.jamal2367.uvsmobile.ui.ViewModelFactories.
  */
 class AppContainer(private val context: Context) {
 
@@ -76,9 +76,6 @@ class AppContainer(private val context: Context) {
             }
             .build()
     }
-
-    /** The plain client: no failover, used where a single server is addressed. */
-    val plainClient: OkHttpClient get() = baseClient
 
     private val apiClient: OkHttpClient by lazy {
         baseClient.newBuilder()

@@ -1,7 +1,6 @@
 package com.jamal2367.uvsmobile.data.repository
 
 import com.jamal2367.uvsmobile.data.model.ApiErrorBody
-import com.jamal2367.uvsmobile.data.model.ApiIndex
 import com.jamal2367.uvsmobile.data.model.FilePathBody
 import com.jamal2367.uvsmobile.data.model.FilePathsBody
 import com.jamal2367.uvsmobile.data.model.LibraryEntry
@@ -39,9 +38,6 @@ class ScannerRepository(
     private data class CachedPage(val etag: String, val page: LibraryPage)
 
     private val pageCache = ConcurrentHashMap<String, CachedPage>()
-
-    /** The version and endpoint list - what a connection test asks for. */
-    suspend fun index(): ApiIndex = call { api.index() }
 
     /**
      * One window onto the library.
@@ -166,7 +162,7 @@ class ScannerRepository(
             timedOut = unreachable.cause is SocketTimeoutException,
             cause = unreachable.cause,
         )
-    } catch (notConfigured: NoServerConfiguredException) {
+    } catch (_: NoServerConfiguredException) {
         throw ApiFailure.NotConfigured
     } catch (io: IOException) {
         throw ApiFailure.Unreachable(null, io is SocketTimeoutException, io)

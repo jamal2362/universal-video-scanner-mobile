@@ -1,7 +1,6 @@
 package com.jamal2367.uvsmobile.util
 
 import android.content.Context
-import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
@@ -57,13 +56,6 @@ object Formatters {
         return "${dateFormat.format(date)} ${timeFormat.format(date)}"
     }
 
-    /** A date without the time, for a row where the hour adds nothing. */
-    fun date(epochSeconds: Double?): String? {
-        val value = epochSeconds?.takeIf { it > 0 } ?: return null
-        return DateFormat.getDateInstance(DateFormat.MEDIUM)
-            .format(Date((value * 1000).toLong()))
-    }
-
     /** `8,4` - a rating out of ten. */
     fun ratingOutOfTen(value: Double?): String? =
         value?.takeIf { it > 0 }?.let { format(it, 1) }
@@ -89,7 +81,7 @@ object Formatters {
 
     /** A whole number the API happens to carry as a floating point one. */
     fun whole(value: Double?): String? =
-        value?.takeIf { abs(it) > 0 }?.let { it.roundToInt().toString() }
+        value?.takeIf { abs(it) > 0 }?.roundToInt()?.toString()
 
     private fun format(value: Double, decimals: Int): String =
         String.format(Locale.getDefault(), "%.${decimals}f", value)

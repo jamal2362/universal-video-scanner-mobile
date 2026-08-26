@@ -16,6 +16,7 @@ import okhttp3.Response
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
+import kotlin.time.Duration.Companion.milliseconds
 
 /** What arrives on `/api/v1/events`, plus the state of the connection itself. */
 sealed interface LiveEvent {
@@ -65,14 +66,14 @@ class SseClient(
             // no connection is held open in the background.
             if (!router.settings.liveUpdates) {
                 emit(LiveEvent.Disconnected)
-                delay(DISABLED_RETRY_MS)
+                delay(DISABLED_RETRY_MS.milliseconds)
                 continue
             }
 
             val servers = router.candidates()
             if (servers.isEmpty()) {
                 emit(LiveEvent.NotConfigured)
-                delay(NOT_CONFIGURED_RETRY_MS)
+                delay(NOT_CONFIGURED_RETRY_MS.milliseconds)
                 continue
             }
 
@@ -92,12 +93,12 @@ class SseClient(
             if (sawAnything) {
                 attempt = 0
                 // What the server itself asks a client to wait.
-                delay(RECONNECT_MS)
+                delay(RECONNECT_MS.milliseconds)
             } else {
                 attempt++
                 // Never even opened: try the other address, and back off so an
                 // instance that is simply not there is not hammered.
-                delay(if (attempt % servers.size == 0) FAILED_RETRY_MS else 0)
+                delay((if (attempt % servers.size == 0) FAILED_RETRY_MS else 0).milliseconds)
             }
         }
     }
@@ -164,7 +165,7 @@ class SseClient(
 
             else -> null
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         // An event this build does not understand is not worth dropping the
         // stream for - the next one may well be one it does.
         null

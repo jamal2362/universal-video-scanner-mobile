@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -181,21 +180,4 @@ fun StatTile(
             )
         }
     }
-}
-
-/** A hairline spacer used where two blocks need separating without a card. */
-@Composable
-fun ThinDivider(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-    )
-}
-
-/** Fixed-width spacer, for rows that need a little air between chips. */
-@Composable
-fun HSpace(width: Int) {
-    Box(modifier = Modifier.width(width.dp))
 }

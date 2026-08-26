@@ -1,19 +1,19 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "com.jamal2367.uvsmobile"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.jamal2367.uvsmobile"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 1
+        targetSdk = 37
+        versionCode = 10
         versionName = "1.0.0"
     }
 
@@ -32,32 +32,9 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
-    lint {
-        // An adaptive icon is only picked up from a -v26 folder, whatever the
-        // minimum SDK says; the check does not know that.
-        disable += "ObsoleteSdkInt"
-        warningsAsErrors = false
-        abortOnError = true
-    }
-
     buildFeatures {
-        compose = true
         buildConfig = true
-    }
-
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
+        compose = true
     }
 }
 

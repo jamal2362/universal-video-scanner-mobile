@@ -75,9 +75,9 @@ class FilesViewModel(application: Application) : AndroidViewModel(application) {
 
         container.liveEvents
             .onEach { event ->
-                when {
-                    event is LiveEvent.Progress && !event.progress.isScanning -> load(silent = true)
-                    event is LiveEvent.FileDeleted -> load(silent = true)
+                when (event) {
+                    is LiveEvent.Progress if !event.progress.isScanning -> load(silent = true)
+                    is LiveEvent.FileDeleted -> load(silent = true)
                     else -> Unit
                 }
             }

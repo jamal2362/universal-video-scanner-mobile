@@ -57,7 +57,7 @@ fun MetaChip(
  *
  * Dolby Vision names its enhancement layer, because FEL and MEL are the whole
  * point of the distinction; anything else shows the format the scanner
- * determined, and a title it could not determine shows nothing at all rather
+ * determined, and a title it could not determine shows anything at all rather
  * than a confident "SDR".
  */
 @Composable

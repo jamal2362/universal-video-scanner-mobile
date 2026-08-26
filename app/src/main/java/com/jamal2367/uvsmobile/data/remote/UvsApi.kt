@@ -34,7 +34,7 @@ interface UvsApi {
      * A window onto the library.
      *
      * The filters, ranges, search, sort, order, paging and the `fields` subset
-     * all travel in [params]; [LibraryQuery] builds them. `If-None-Match` lets
+     * all travel in [params]; LibraryQuery builds them. `If-None-Match` lets
      * the server answer `304` when nothing changed, which is why the raw
      * [Response] is returned rather than the body alone.
      */

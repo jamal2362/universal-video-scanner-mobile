@@ -23,10 +23,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /** What the library screen is showing right now. */
 data class LibraryUiState(
@@ -156,7 +156,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             .launchIn(viewModelScope)
 
         reloadRequests
-            .debounce(RELOAD_DEBOUNCE_MS)
+            .debounce(RELOAD_DEBOUNCE_MS.milliseconds)
             .onEach { syncChangedEntries() }
             .launchIn(viewModelScope)
 
@@ -315,13 +315,13 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             _state.value = _state.value.copy(entries = patched)
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
-        } catch (failure: Throwable) {
+        } catch (_: Throwable) {
             // A failed sync is not worth an error on screen: the rows on it are
             // still the ones the server last handed over.
         }
     }
 
-    private fun rememberSyncStamp(entries: List<com.jamal2367.uvsmobile.data.model.LibraryEntry>) {
+    private fun rememberSyncStamp(entries: List<LibraryEntry>) {
         val newest = entries.maxOfOrNull { it.updatedAt ?: 0.0 } ?: return
         if (newest > lastSyncStamp) lastSyncStamp = newest
     }
@@ -356,7 +356,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 repository.stats()
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
-            } catch (failure: Throwable) {
+            } catch (_: Throwable) {
                 return@launch
             }
 
@@ -364,7 +364,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 repository.distinctValues(LibraryQuery.VALUE_FIELDS)
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
-            } catch (failure: Throwable) {
+            } catch (_: Throwable) {
                 // The sheet falls back to a text box for those four fields;
                 // the counted ones are already usable.
                 emptyMap()

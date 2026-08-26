@@ -41,7 +41,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +51,7 @@ import com.jamal2367.uvsmobile.R
 import com.jamal2367.uvsmobile.ui.components.EmptyState
 import com.jamal2367.uvsmobile.ui.components.ErrorState
 import com.jamal2367.uvsmobile.ui.components.LoadingState
+import androidx.compose.ui.platform.LocalResources
 
 /**
  * What is in the media directory, and what of it the library already holds.
@@ -68,7 +68,7 @@ fun FilesScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     val scannedOneFormat = stringResource(R.string.files_scan_one_done)
 
     LaunchedEffect(state.message) {

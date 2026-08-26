@@ -56,9 +56,9 @@ class DetailViewModel(
         // interface, by the file watcher - is worth picking up here too.
         container.liveEvents
             .onEach { event ->
-                when {
-                    event is LiveEvent.EntryUpdated && event.event.filePath == filePath -> load()
-                    event is LiveEvent.FileDeleted && event.event.affectedPath == filePath ->
+                when (event) {
+                    is LiveEvent.EntryUpdated if event.event.filePath == filePath -> load()
+                    is LiveEvent.FileDeleted if event.event.affectedPath == filePath ->
                         _state.value = _state.value.copy(deleted = true)
 
                     else -> Unit
