@@ -78,7 +78,7 @@ class SettingsRepository(private val context: Context) {
         dynamicColor = this[KEY_DYNAMIC_COLOR] ?: true,
         libraryLayout = this[KEY_LAYOUT].toEnum(LibraryLayout.GRID),
         posterWidth = this[KEY_POSTER_WIDTH] ?: 320,
-        pageSize = this[KEY_PAGE_SIZE] ?: 60,
+        pageSize = this[KEY_PAGE_SIZE] ?: AppSettings.PAGE_SIZE_ALL,
         liveUpdates = this[KEY_LIVE_UPDATES] ?: true,
     )
 

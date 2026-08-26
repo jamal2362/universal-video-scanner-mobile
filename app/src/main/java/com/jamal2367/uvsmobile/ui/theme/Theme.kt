@@ -66,6 +66,21 @@ private val DarkColors = darkColorScheme(
 )
 
 /**
+ * Whether the app is painting dark right now.
+ *
+ * The theme is not the only thing that has to know: the status bar draws its
+ * clock and icons in a colour the platform picks, and it picks it from the
+ * system's setting rather than the app's - so a phone left on dark with the
+ * app set to light would put white icons on a white bar. Both read this.
+ */
+@Composable
+fun isDarkTheme(themeMode: ThemeMode): Boolean = when (themeMode) {
+    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    ThemeMode.LIGHT -> false
+    ThemeMode.DARK -> true
+}
+
+/**
  * The app's Material 3 theme.
  *
  * Takes its palette from the wallpaper where the platform offers one and the
@@ -78,11 +93,7 @@ fun UvsTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val dark = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
+    val dark = isDarkTheme(themeMode)
 
     val context = LocalContext.current
     val colorScheme = when {

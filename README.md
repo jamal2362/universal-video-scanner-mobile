@@ -113,11 +113,11 @@ the stream walks the list itself when an address will not open at all.
 
 | Screen | What it is for |
 |--------|----------------|
-| **Library** | The titles. Search, the filter sheet, the order, grid or list, and the next page as you reach the end |
+| **Library** | The titles. Search, the filter sheet, the order, grid or list, and — when it is asked for in pages — the buttons to page through them |
 | **Statistics** | The library in numbers; tap a row to open it filtered in the library |
 | **Files** | The media directory, what is scanned and what is not, and the two ways to change that |
 | **Scan** | Progress, start, stop, the live activity, and emptying the library |
-| **Settings** | The two servers, the connection mode, the appearance and how much to fetch at a time |
+| **Settings** | The two servers, saved when you say so, the connection mode, the appearance and how many entries a page holds |
 
 **The filter sheet** offers every field the API narrows by, and every one of
 them as the values your library actually holds. That is not a nicety: the API
@@ -144,6 +144,20 @@ built around; here it is the header image at the top of a title's screen, faded
 into the page with the cover on top of it. A title with no cover falls back to
 its backdrop rather than showing a blank, and an instance too old to know
 `portrait_url` behaves exactly that way throughout.
+
+**Entries per page** decides whether the library arrives in one piece or in
+windows. At **All** — which is how it starts — the whole answer to the current
+question comes down at once and scrolls as one list; at 30, 60, 100 or 200 the
+server is asked for that many, and **Back** and **Next** under the library move
+between the pages. Either way it is `limit`/`offset` doing the work on the
+server, and `total` is what makes "page 3 of 12" knowable without asking for
+the rest.
+
+**The addresses** are typed on the settings screen and stored when **Save** is
+tapped, not while they are being typed: a host name is wrong for as long as it
+is half-written, and every keystroke stored would be one more address the app
+goes off and tries to reach. **Test connection** tries what is on the screen,
+so an address can be checked before it is kept.
 
 **The order** includes the combined modes: HDR format + audio track, HDR format
 + video bitrate, HDR format + audio bitrate, audio track + audio bitrate. Those

@@ -1,9 +1,9 @@
 package com.jamal2367.uvsmobile.ui.navigation
 
-import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,7 +26,7 @@ fun UvsNavHost(
     // The library's state outlives its tab: a filter tapped in the statistics
     // has to land in the same view model the library screen is reading, and a
     // per-destination one would be a different object.
-    val activity = LocalContext.current as ComponentActivity
+    val activity = checkNotNull(LocalActivity.current) as ViewModelStoreOwner
     val libraryViewModel: LibraryViewModel = viewModel(viewModelStoreOwner = activity)
 
     NavHost(

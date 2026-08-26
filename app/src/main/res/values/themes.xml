@@ -9,5 +9,12 @@
         <item name="android:windowBackground">@color/window_background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!--
+            The light window is painted underneath a transparent status bar, so
+            the clock and the icons on it have to be dark to be seen at all.
+            The app sets this again once it knows which theme it is showing;
+            this is only for the frames before it does.
+        -->
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

@@ -57,9 +57,19 @@ data class AppSettings(
     val dynamicColor: Boolean = true,
     val libraryLayout: LibraryLayout = LibraryLayout.GRID,
     val posterWidth: Int = 320,
-    val pageSize: Int = 60,
+    val pageSize: Int = PAGE_SIZE_ALL,
     val liveUpdates: Boolean = true,
 ) {
+    /**
+     * How many entries one page of the library holds, or null for all of them.
+     *
+     * Stored as a number because preferences hold numbers; [PAGE_SIZE_ALL]
+     * means the library is not cut into pages at all, which is also what the
+     * API does when it is asked without a `limit`.
+     */
+    val entriesPerPage: Int?
+        get() = pageSize.takeIf { it > 0 }
+
     /** True once at least one server is filled in far enough to try. */
     val isConfigured: Boolean
         get() = servers().isNotEmpty()
@@ -79,6 +89,10 @@ data class AppSettings(
 
     companion object {
         val POSTER_WIDTHS = listOf(160, 320, 480, 640)
-        val PAGE_SIZES = listOf(30, 60, 100, 200)
+
+        /** The page size that means "do not page at all". */
+        const val PAGE_SIZE_ALL = 0
+
+        val PAGE_SIZES = listOf(30, 60, 100, 200, PAGE_SIZE_ALL)
     }
 }

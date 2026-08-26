@@ -2,8 +2,11 @@ package com.jamal2367.uvsmobile.ui
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -21,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -52,7 +56,12 @@ fun UvsApp(container: AppContainer, settings: AppSettings) {
 
     // Wide enough for a rail: a tablet or an unfolded phone should not waste a
     // whole edge on a bar the height of a thumb.
-    val useRail = LocalConfiguration.current.screenWidthDp >= 720
+    //
+    // Measured on the shorter edge, so it is the device that decides and not
+    // the way it is being held: a phone turned sideways is over 720dp wide and
+    // would have swung its bar to the side, which is the one place a thumb
+    // holding the phone cannot comfortably get to.
+    val useRail = LocalConfiguration.current.smallestScreenWidthDp >= 600
 
     CompositionLocalProvider(LocalPosterServer provides posterServer) {
         if (useRail) {
@@ -89,7 +98,12 @@ private fun UvsNavigationBar(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destinations = remember { TopLevelDestination.entries }
 
-    NavigationBar {
+    // Shorter than the 80dp Material leaves room for: with the label only
+    // under the tab in use, the rest is empty space taken off five screens.
+    // The system's own gesture bar is added underneath rather than eaten into.
+    val systemBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+    NavigationBar(modifier = Modifier.height(NavigationBarHeight + systemBottom)) {
         destinations.forEach { destination ->
             val selected = backStackEntry?.destination?.hierarchy
                 ?.any { it.route == destination.route } == true
@@ -144,3 +158,6 @@ private fun NavHostController.switchTo(destination: TopLevelDestination) {
         restoreState = true
     }
 }
+
+/** How tall the bar itself is, before the system's gesture bar underneath it. */
+private val NavigationBarHeight = 64.dp

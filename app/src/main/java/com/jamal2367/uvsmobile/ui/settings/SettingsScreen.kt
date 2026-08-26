@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -112,8 +113,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     config = settings.primary,
                     test = state.primaryTest,
                     isActive = state.activeServerLabel != null && state.activeIsPrimary,
-                    onChange = { viewModel.updateServer(ServerSlot.PRIMARY) { _ -> it } },
-                    onTest = { viewModel.testConnection(ServerSlot.PRIMARY) },
+                    onSave = { viewModel.saveServer(ServerSlot.PRIMARY, it) },
+                    onTest = { viewModel.testConnection(ServerSlot.PRIMARY, it) },
+                    onEdit = { viewModel.clearTest(ServerSlot.PRIMARY) },
                     sanitizeHost = viewModel::sanitizeHost,
                     portFromHost = viewModel::portFromHost,
                     schemeFromHost = viewModel::schemeFromHost,
@@ -127,8 +129,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     test = state.secondaryTest,
                     isActive = state.activeServerLabel != null && !state.activeIsPrimary &&
                         settings.secondary.label == state.activeServerLabel,
-                    onChange = { viewModel.updateServer(ServerSlot.SECONDARY) { _ -> it } },
-                    onTest = { viewModel.testConnection(ServerSlot.SECONDARY) },
+                    onSave = { viewModel.saveServer(ServerSlot.SECONDARY, it) },
+                    onTest = { viewModel.testConnection(ServerSlot.SECONDARY, it) },
+                    onEdit = { viewModel.clearTest(ServerSlot.SECONDARY) },
                     sanitizeHost = viewModel::sanitizeHost,
                     portFromHost = viewModel::portFromHost,
                     schemeFromHost = viewModel::schemeFromHost,
@@ -149,15 +152,36 @@ private fun ServerCard(
     config: ServerConfig,
     test: TestState,
     isActive: Boolean,
-    onChange: (ServerConfig) -> Unit,
-    onTest: () -> Unit,
+    onSave: (ServerConfig) -> Unit,
+    onTest: (ServerConfig) -> Unit,
+    onEdit: () -> Unit,
     sanitizeHost: (String) -> String,
     portFromHost: (String) -> Int?,
     schemeFromHost: (String) -> Boolean?,
 ) {
     var tokenVisible by rememberSaveable { mutableStateOf(false) }
-    var hostText by rememberSaveable(config.host) { mutableStateOf(config.host) }
-    var portText by rememberSaveable(config.port) { mutableStateOf(config.port.toString()) }
+
+    // What is on the screen, which is not yet what the app uses: an address is
+    // wrong for as long as it is being typed, and every keystroke stored would
+    // be one more address the app goes off and tries to reach. Kept field by
+    // field so the list can put the card away while it is scrolled past
+    // without the half-typed address going with it.
+    var enabled by rememberSaveable(config) { mutableStateOf(config.enabled) }
+    var useHttps by rememberSaveable(config) { mutableStateOf(config.useHttps) }
+    var hostText by rememberSaveable(config) { mutableStateOf(config.host) }
+    var portText by rememberSaveable(config) { mutableStateOf(config.port.toString()) }
+    var token by rememberSaveable(config) { mutableStateOf(config.token) }
+
+    val draft = config.copy(
+        enabled = enabled,
+        useHttps = useHttps,
+        host = hostText,
+        // A port field left empty or half-deleted is not a port; the stored one
+        // stands until a usable number is typed over it.
+        port = portText.toIntOrNull()?.takeIf { it in 1..65535 } ?: config.port,
+        token = token,
+    )
+    val unsaved = draft != config
 
     SectionCard(
         title = title,
@@ -174,8 +198,11 @@ private fun ServerCard(
     ) {
         SwitchRow(
             label = stringResource(R.string.settings_server_enabled),
-            checked = config.enabled,
-            onCheckedChange = { onChange(config.copy(enabled = it)) },
+            checked = enabled,
+            onCheckedChange = {
+                enabled = it
+                onEdit()
+            },
         )
 
         OutlinedTextField(
@@ -183,18 +210,10 @@ private fun ServerCard(
             onValueChange = { raw ->
                 // A pasted `https://scanner.example.com:8443/` should fill all
                 // three fields rather than end up in the host as it stands.
-                val host = sanitizeHost(raw)
-                val pastedPort = portFromHost(raw)
-                val pastedHttps = schemeFromHost(raw)
-                hostText = host
-                pastedPort?.let { portText = it.toString() }
-                onChange(
-                    config.copy(
-                        host = host,
-                        port = pastedPort ?: config.port,
-                        useHttps = pastedHttps ?: config.useHttps,
-                    )
-                )
+                hostText = sanitizeHost(raw)
+                portFromHost(raw)?.let { portText = it.toString() }
+                schemeFromHost(raw)?.let { useHttps = it }
+                onEdit()
             },
             label = { Text(stringResource(R.string.settings_host)) },
             placeholder = { Text("192.168.1.10") },
@@ -207,11 +226,8 @@ private fun ServerCard(
             OutlinedTextField(
                 value = portText,
                 onValueChange = { raw ->
-                    val digits = raw.filter { it.isDigit() }.take(5)
-                    portText = digits
-                    digits.toIntOrNull()?.takeIf { it in 1..65535 }?.let {
-                        onChange(config.copy(port = it))
-                    }
+                    portText = raw.filter { it.isDigit() }.take(5)
+                    onEdit()
                 },
                 label = { Text(stringResource(R.string.settings_port)) },
                 singleLine = true,
@@ -224,15 +240,21 @@ private fun ServerCard(
             ) {
                 SwitchRow(
                     label = stringResource(R.string.settings_https),
-                    checked = config.useHttps,
-                    onCheckedChange = { onChange(config.copy(useHttps = it)) },
+                    checked = useHttps,
+                    onCheckedChange = {
+                        useHttps = it
+                        onEdit()
+                    },
                 )
             }
         }
 
         OutlinedTextField(
-            value = config.token,
-            onValueChange = { onChange(config.copy(token = it)) },
+            value = token,
+            onValueChange = {
+                token = it
+                onEdit()
+            },
             label = { Text(stringResource(R.string.settings_token)) },
             supportingText = { Text(stringResource(R.string.settings_token_hint)) },
             singleLine = true,
@@ -262,8 +284,14 @@ private fun ServerCard(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedButton(onClick = onTest, enabled = test != TestState.Running) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedButton(
+                onClick = { onTest(draft) },
+                enabled = test != TestState.Running,
+            ) {
                 Text(
                     stringResource(
                         if (test == TestState.Running) {
@@ -274,7 +302,21 @@ private fun ServerCard(
                     )
                 )
             }
-            TestResult(test, modifier = Modifier.padding(start = 12.dp))
+            Button(onClick = { onSave(draft) }, enabled = unsaved) {
+                Text(stringResource(R.string.settings_save))
+            }
+        }
+
+        // The address that was tested is the one on screen, not the one in
+        // use - so the result stays readable next to an unsaved change.
+        TestResult(test)
+
+        if (unsaved) {
+            Text(
+                text = stringResource(R.string.settings_unsaved),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
         }
     }
 }
@@ -433,7 +475,15 @@ private fun LibraryCard(settings: AppSettings, viewModel: SettingsViewModel) {
                 FilterChip(
                     selected = settings.pageSize == size,
                     onClick = { viewModel.setPageSize(size) },
-                    label = { Text(size.toString()) },
+                    label = {
+                        Text(
+                            if (size == AppSettings.PAGE_SIZE_ALL) {
+                                stringResource(R.string.settings_page_size_all)
+                            } else {
+                                size.toString()
+                            }
+                        )
+                    },
                 )
             }
         }
