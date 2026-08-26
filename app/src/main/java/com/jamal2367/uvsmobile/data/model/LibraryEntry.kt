@@ -40,7 +40,17 @@ data class LibraryEntry(
     @SerialName("updated_at") val updatedAt: Double? = null,
 
     // --- metadata ---
+    /** The 16:9 backdrop the web interface is built around. */
     @SerialName("poster_url") val posterUrl: String? = null,
+    /**
+     * The upright 2:3 cover.
+     *
+     * What a grid of covers wants: a backdrop cropped to 2:3 loses most of the
+     * frame and usually the title with it. Absent on an entry the scanner has
+     * not looked one up for yet, and on an instance too old to know the field -
+     * both fall back to the backdrop.
+     */
+    @SerialName("portrait_url") val portraitUrl: String? = null,
     @SerialName("tmdb_id") val tmdbId: String? = null,
     @SerialName("tmdb_title") val tmdbTitle: String? = null,
     @SerialName("tmdb_year") val tmdbYear: String? = null,

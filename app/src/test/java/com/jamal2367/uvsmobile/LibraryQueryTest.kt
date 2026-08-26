@@ -79,8 +79,11 @@ class LibraryQueryTest {
         val fields = params.getValue("fields").split(",")
 
         assertTrue(fields.contains("path"))
-        assertTrue(fields.contains("poster_url"))
         assertTrue(fields.contains("hdr_format"))
+        // Both images: the tile draws the cover, and falls back to the backdrop
+        // for a title that has none.
+        assertTrue(fields.contains("poster_url"))
+        assertTrue(fields.contains("portrait_url"))
         // The plot is thousands of characters and no list row shows it.
         assertFalse(fields.contains("tmdb_plot"))
         assertFalse(fields.contains("tmdb_cast"))

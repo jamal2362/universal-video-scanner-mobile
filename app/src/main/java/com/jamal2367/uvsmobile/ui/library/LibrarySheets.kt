@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,7 @@ import com.jamal2367.uvsmobile.data.model.RangeUnit
 import com.jamal2367.uvsmobile.data.model.RangeValue
 import com.jamal2367.uvsmobile.data.model.SortOption
 import com.jamal2367.uvsmobile.data.model.SortOrder
+import kotlinx.coroutines.delay
 
 /**
  * The order to put the library in.
@@ -170,18 +172,25 @@ fun FilterSheet(
 
             FilterField.entries.forEach { field ->
                 val values = options.forField(field)
-                if (values.isEmpty()) {
-                    FreeTextFilter(
-                        label = stringResource(field.labelRes),
-                        value = query.filters[field].orEmpty(),
-                        onValue = { onFilter(field, it) },
-                    )
-                } else {
-                    ChoiceFilter(
+                when {
+                    values.isNotEmpty() -> ChoiceFilter(
                         label = stringResource(field.labelRes),
                         values = values,
                         selected = query.filters[field],
                         onSelect = { onFilter(field, it) },
+                    )
+
+                    // The values are known and there are none: the library holds
+                    // nothing to narrow down by here, so the field is left out
+                    // rather than offered as a box that can only come back empty.
+                    options.loaded -> Unit
+
+                    // Not known yet - the server did not answer. A text box at
+                    // least lets someone who knows the exact value type it.
+                    else -> FreeTextFilter(
+                        label = stringResource(field.labelRes),
+                        value = query.filters[field].orEmpty(),
+                        onValue = { onFilter(field, it) },
                     )
                 }
             }
@@ -244,16 +253,30 @@ private fun ChoiceFilter(
     }
 }
 
+/**
+ * A filter typed out by hand.
+ *
+ * Only reached when the server never told us which values exist. The API
+ * matches a filter exactly, so this says so rather than letting someone guess
+ * at a substring and conclude the filter is broken.
+ */
 @Composable
 private fun FreeTextFilter(label: String, value: String, onValue: (String?) -> Unit) {
     var text by remember(value) { mutableStateOf(value) }
+
+    // A keystroke is not a question: the library is asked once the typing stops.
+    LaunchedEffect(text) {
+        if (text != value) {
+            delay(INPUT_DEBOUNCE_MS)
+            onValue(text.ifBlank { null })
+        }
+    }
+
     OutlinedTextField(
         value = text,
-        onValueChange = {
-            text = it
-            onValue(it.ifBlank { null })
-        },
+        onValueChange = { text = it },
         label = { Text(label) },
+        supportingText = { Text(stringResource(R.string.filter_exact_hint)) },
         singleLine = true,
         modifier = Modifier
             .fillMaxWidth()
@@ -277,6 +300,16 @@ private fun RangeFilterRow(
     var minText by remember(value.min) { mutableStateOf(value.min.toDisplay(unit)) }
     var maxText by remember(value.max) { mutableStateOf(value.max.toDisplay(unit)) }
 
+    // Typing "6", "60", "600" is one question, not three - and without this the
+    // library is re-fetched, and the list redrawn, on every digit.
+    LaunchedEffect(minText, maxText) {
+        val typed = RangeValue(min = minText.toStored(unit), max = maxText.toStored(unit))
+        if (typed != value) {
+            delay(INPUT_DEBOUNCE_MS)
+            onValue(typed)
+        }
+    }
+
     Column(modifier = Modifier.padding(top = 10.dp)) {
         Text(
             text = "$label${unit.suffix()}",
@@ -290,10 +323,7 @@ private fun RangeFilterRow(
         ) {
             OutlinedTextField(
                 value = minText,
-                onValueChange = {
-                    minText = it
-                    onValue(value.copy(min = it.toStored(unit)))
-                },
+                onValueChange = { minText = it },
                 label = { Text(stringResource(R.string.filter_min)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -301,10 +331,7 @@ private fun RangeFilterRow(
             )
             OutlinedTextField(
                 value = maxText,
-                onValueChange = {
-                    maxText = it
-                    onValue(value.copy(max = it.toStored(unit)))
-                },
+                onValueChange = { maxText = it },
                 label = { Text(stringResource(R.string.filter_max)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -343,6 +370,9 @@ private fun RecentlyModifiedRow(value: RangeValue, onValue: (RangeValue) -> Unit
             .padding(top = 10.dp),
     )
 }
+
+/** How long the sheet waits after the last keystroke before asking again. */
+private const val INPUT_DEBOUNCE_MS = 450L
 
 private fun nowInSeconds(): Double = System.currentTimeMillis() / 1000.0
 

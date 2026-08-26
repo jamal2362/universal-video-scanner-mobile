@@ -9,6 +9,7 @@ import com.jamal2367.uvsmobile.data.model.LibraryPage
 import com.jamal2367.uvsmobile.data.model.LibraryQuery
 import com.jamal2367.uvsmobile.data.model.LibraryStats
 import com.jamal2367.uvsmobile.data.model.MediaFile
+import com.jamal2367.uvsmobile.data.model.SortOption
 import com.jamal2367.uvsmobile.data.model.ScanStarted
 import com.jamal2367.uvsmobile.data.model.ScanStatus
 import com.jamal2367.uvsmobile.data.remote.ApiFailure
@@ -71,6 +72,47 @@ class ScannerRepository(
     }
 
     suspend fun stats(): LibraryStats = call { api.stats() }
+
+    /**
+     * The distinct values the library holds for a handful of fields.
+     *
+     * Asked for as a projection of the whole library rather than field by
+     * field: the API has no "list the values" endpoint, but `fields=` cuts an
+     * entry down to just these, which is a few hundred bytes per thousand
+     * entries and comes back as a `304` on every later ask.
+     *
+     * Sorted and free of blanks and "Unknown", because this feeds a list of
+     * choices - a chip that matches nothing is worse than no chip.
+     */
+    suspend fun distinctValues(fields: List<String>): Map<String, List<String>> {
+        val page = library(
+            query = LibraryQuery(fields = fields, sort = SortOption.FILENAME),
+            limit = null,
+            offset = 0,
+        )
+
+        val readers: Map<String, (LibraryEntry) -> String?> = mapOf(
+            "hdr_detail" to { it.hdrDetail },
+            "el_type" to { it.elType },
+            "video_encoder" to { it.videoEncoder },
+            "dv_cm_version" to { it.dvCmVersion },
+            "hdr_format" to { it.hdrFormat },
+            "resolution" to { it.resolution },
+            "resolution_class" to { it.resolutionClass },
+            "video_codec" to { it.videoCodec },
+            "audio_codec" to { it.audioCodec },
+        )
+
+        return fields.mapNotNull { field ->
+            val read = readers[field] ?: return@mapNotNull null
+            val values = page.files
+                .mapNotNull { read(it)?.trim() }
+                .filter { it.isNotEmpty() && !it.equals("Unknown", ignoreCase = true) }
+                .distinct()
+                .sorted()
+            field to values
+        }.toMap()
+    }
 
     suspend fun mediaFiles(): List<MediaFile> = call { api.mediaFiles().files }
 

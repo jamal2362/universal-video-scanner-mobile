@@ -69,6 +69,7 @@
     <!-- Filter -->
     <string name="filter_title">Bibliothek filtern</string>
     <string name="filter_exact">Genaue Übereinstimmung</string>
+    <string name="filter_exact_hint">Muss dem gespeicherten Wert exakt entsprechen</string>
     <string name="filter_ranges">Bereiche</string>
     <string name="filter_min">von</string>
     <string name="filter_max">bis</string>

@@ -53,23 +53,33 @@ data class LibraryUiState(
  */
 data class FilterOptions(
     val hdrFormats: List<String> = emptyList(),
-    val elTypes: List<String> = listOf("FEL", "MEL"),
     val resolutions: List<String> = emptyList(),
     val resolutionClasses: List<String> = emptyList(),
     val videoCodecs: List<String> = emptyList(),
     val audioCodecs: List<String> = emptyList(),
+    val hdrDetails: List<String> = emptyList(),
+    val elTypes: List<String> = emptyList(),
+    val videoEncoders: List<String> = emptyList(),
+    val cmVersions: List<String> = emptyList(),
+    /**
+     * Whether the values above were actually read off the library.
+     *
+     * Until they were, a field with no values falls back to a text box; after
+     * they were, an empty list means the library holds nothing to filter by and
+     * the field is left out of the sheet altogether.
+     */
+    val loaded: Boolean = false,
 ) {
     fun forField(field: FilterField): List<String> = when (field) {
         FilterField.HDR_FORMAT -> hdrFormats
-        FilterField.EL_TYPE -> elTypes
         FilterField.RESOLUTION -> resolutions
         FilterField.RESOLUTION_CLASS -> resolutionClasses
         FilterField.VIDEO_CODEC -> videoCodecs
         FilterField.AUDIO_CODEC -> audioCodecs
-        // Neither the HDR detail, the encoder nor the CM version is counted by
-        // /library/stats, so those stay free text - the API matches them
-        // case-insensitively anyway.
-        FilterField.HDR_DETAIL, FilterField.VIDEO_ENCODER, FilterField.DV_CM_VERSION -> emptyList()
+        FilterField.HDR_DETAIL -> hdrDetails
+        FilterField.EL_TYPE -> elTypes
+        FilterField.VIDEO_ENCODER -> videoEncoders
+        FilterField.DV_CM_VERSION -> cmVersions
     }
 }
 
@@ -328,31 +338,59 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         refresh()
     }
 
+    /**
+     * Fill the filter sheet with the values the library actually holds.
+     *
+     * Two calls, because the server counts five of the nine filterable fields
+     * and not the other four. The counts are the cheap call; the rest are read
+     * off a projection of the library, which is four short strings an entry and
+     * comes back as a 304 on every later open.
+     *
+     * It matters that these are real values: the API matches a filter exactly,
+     * so a typed "Profile 8" finds nothing at all when the stored detail reads
+     * "Dolby Vision Profile 8.1" - a filter that looks broken rather than empty.
+     */
     private fun loadFilterOptions() {
         viewModelScope.launch {
-            try {
-                val stats = repository.stats()
-                _state.value = _state.value.copy(
-                    filterOptions = FilterOptions(
-                        // The counts name Dolby Vision by its enhancement layer,
-                        // while the filter matches the stored format - so the
-                        // suffix comes off and the layer gets its own field.
-                        hdrFormats = stats.hdrFormats.keys
-                            .map { it.substringBefore(" (").trim() }
-                            .filter { it.isNotBlank() && it != "Unknown" }
-                            .distinct()
-                            .sorted(),
-                        resolutions = stats.resolutions.keys.filter { it != "Unknown" }.sorted(),
-                        resolutionClasses = stats.resolutionClasses.keys
-                            .filter { it != "Unknown" },
-                        videoCodecs = stats.videoCodecs.keys.filter { it != "Unknown" }.sorted(),
-                        audioCodecs = stats.audioCodecs.keys.filter { it != "Unknown" }.sorted(),
-                    )
-                )
+            val counted = try {
+                repository.stats()
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
             } catch (failure: Throwable) {
-                if (failure is kotlinx.coroutines.CancellationException) throw failure
-                // The filter sheet falls back to free text; nothing to report.
+                return@launch
             }
+
+            val values = try {
+                repository.distinctValues(LibraryQuery.VALUE_FIELDS)
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (failure: Throwable) {
+                // The sheet falls back to a text box for those four fields;
+                // the counted ones are already usable.
+                emptyMap()
+            }
+
+            _state.value = _state.value.copy(
+                filterOptions = FilterOptions(
+                    // The counts name Dolby Vision by its enhancement layer,
+                    // while the filter matches the stored format - so the
+                    // suffix comes off and the layer gets its own field.
+                    hdrFormats = counted.hdrFormats.keys
+                        .map { it.substringBefore(" (").trim() }
+                        .filter { it.isNotBlank() && it != "Unknown" }
+                        .distinct()
+                        .sorted(),
+                    resolutions = counted.resolutions.keys.filter { it != "Unknown" }.sorted(),
+                    resolutionClasses = counted.resolutionClasses.keys.filter { it != "Unknown" },
+                    videoCodecs = counted.videoCodecs.keys.filter { it != "Unknown" }.sorted(),
+                    audioCodecs = counted.audioCodecs.keys.filter { it != "Unknown" }.sorted(),
+                    hdrDetails = values["hdr_detail"].orEmpty(),
+                    elTypes = values["el_type"].orEmpty(),
+                    videoEncoders = values["video_encoder"].orEmpty(),
+                    cmVersions = values["dv_cm_version"].orEmpty(),
+                    loaded = values.isNotEmpty(),
+                )
+            )
         }
     }
 

@@ -17,27 +17,30 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.jamal2367.uvsmobile.data.prefs.ServerConfig
+import com.jamal2367.uvsmobile.data.model.LibraryEntry
+import com.jamal2367.uvsmobile.ui.LocalPosterServer
+import com.jamal2367.uvsmobile.util.Artwork
 import com.jamal2367.uvsmobile.util.PosterUrls
 
 /**
- * A title's cover.
+ * A title's artwork.
  *
- * The server keeps four widths of every cached poster and makes the one asked
- * for on first use, so a grid of covers costs a kilobyte or two apiece instead
- * of the full-size image. A title without a usable poster falls back to a plain
- * placeholder rather than an empty hole.
+ * Asks for the upright cover by default, which is what every tile and every
+ * poster slot in this app is laid out for; an entry that has none falls back to
+ * the 16:9 backdrop rather than showing a blank. The server keeps four widths
+ * of each cached image and makes the one asked for on first use, so a grid of
+ * covers costs a kilobyte or two apiece instead of the full-size image.
  */
 @Composable
 fun PosterImage(
-    posterUrl: String?,
-    server: ServerConfig?,
+    entry: LibraryEntry,
     width: Int,
     contentDescription: String?,
     modifier: Modifier = Modifier,
+    artwork: Artwork = Artwork.PORTRAIT,
     contentScale: ContentScale = ContentScale.Crop,
 ) {
-    val url = PosterUrls.forEntry(posterUrl, server, width)
+    val url = PosterUrls.forEntry(entry, LocalPosterServer.current, width, artwork)
     val context = LocalContext.current
 
     Box(

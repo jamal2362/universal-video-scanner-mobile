@@ -7,8 +7,11 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -52,6 +55,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -69,7 +74,9 @@ import com.jamal2367.uvsmobile.ui.components.LoadingState
 import com.jamal2367.uvsmobile.ui.components.MetaChip
 import com.jamal2367.uvsmobile.ui.components.PosterImage
 import com.jamal2367.uvsmobile.ui.components.SectionCard
+import com.jamal2367.uvsmobile.util.Artwork
 import com.jamal2367.uvsmobile.util.Formatters
+import com.jamal2367.uvsmobile.util.PosterUrls
 import kotlinx.coroutines.launch
 
 /**
@@ -217,57 +224,14 @@ private fun DetailContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .verticalScroll(rememberScrollState()),
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            PosterImage(
-                posterUrl = entry.posterUrl,
-                server = LocalPosterServer.current,
-                width = maxOf(posterWidth, 480),
-                contentDescription = entry.displayTitle,
-                modifier = Modifier
-                    .width(130.dp)
-                    .height(195.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    text = entry.displayTitle,
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                entry.tmdbYear?.takeIf { it.isNotBlank() }?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                entry.tmdbTagline?.takeIf { it.isNotBlank() }?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontStyle = FontStyle.Italic,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                EntryChipRow(entry = entry, modifier = Modifier.padding(top = 2.dp))
-                entry.top250Rank?.let { rank ->
-                    MetaChip(
-                        text = stringResource(R.string.rating_top250, rank),
-                        container = MaterialTheme.colorScheme.tertiaryContainer,
-                        content = MaterialTheme.colorScheme.onTertiaryContainer,
-                    )
-                }
-            }
-        }
+        DetailHeader(entry = entry, posterWidth = posterWidth)
 
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(
                 onClick = onRescan,
@@ -375,7 +339,107 @@ private fun DetailContent(
             )
         }
 
-        Box(modifier = Modifier.height(24.dp))
+            Box(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+/**
+ * The top of a title's screen: its backdrop, its cover and what it is called.
+ *
+ * Both images earn their place here. The 16:9 backdrop is the header it was
+ * made to be, faded into the page so the text over it stays readable; the
+ * upright cover sits on top of it, which is the one place in the app where the
+ * two are shown together rather than one standing in for the other.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DetailHeader(entry: LibraryEntry, posterWidth: Int) {
+    val hasBackdrop = PosterUrls.forEntry(
+        entry = entry,
+        server = LocalPosterServer.current,
+        width = null,
+        artwork = Artwork.LANDSCAPE,
+    ) != null
+
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        // Half the backdrop stays clear of the cover, which is what makes it
+        // read as a header rather than as a second poster.
+        val overlap = if (hasBackdrop) this.maxWidth * 9f / 16f * 0.55f else 0.dp
+
+        if (hasBackdrop) {
+            PosterImage(
+                entry = entry,
+                width = 640,
+                artwork = Artwork.LANDSCAPE,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f),
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            0.45f to MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
+                            0.8f to MaterialTheme.colorScheme.surface,
+                        )
+                    ),
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = overlap)
+                .padding(horizontal = 16.dp),
+        ) {
+            PosterImage(
+                entry = entry,
+                width = maxOf(posterWidth, 480),
+                contentDescription = entry.displayTitle,
+                modifier = Modifier
+                    .width(130.dp)
+                    .height(195.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = entry.displayTitle,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                entry.tmdbYear?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                entry.tmdbTagline?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                EntryChipRow(entry = entry, modifier = Modifier.padding(top = 2.dp))
+                entry.top250Rank?.let { rank ->
+                    MetaChip(
+                        text = stringResource(R.string.rating_top250, rank),
+                        container = MaterialTheme.colorScheme.tertiaryContainer,
+                        content = MaterialTheme.colorScheme.onTertiaryContainer,
+                    )
+                }
+            }
+        }
     }
 }
 

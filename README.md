@@ -119,14 +119,31 @@ the stream walks the list itself when an address will not open at all.
 | **Scan** | Progress, start, stop, the live activity, and emptying the library |
 | **Settings** | The two servers, the connection mode, the appearance and how much to fetch at a time |
 
-**The filter sheet** offers every field the API narrows by. The ones the
-statistics can count — HDR format, enhancement layer, resolution and its class,
-the two codecs — are offered as the values your library actually holds, rather
-than a guess; the three the counts do not cover — HDR detail, encoder, CM
-version — are free text, which the API matches case-insensitively anyway.
+**The filter sheet** offers every field the API narrows by, and every one of
+them as the values your library actually holds. That is not a nicety: the API
+matches a filter **exactly**, so a typed `Profile 8` finds nothing at all when
+the stored detail reads `Dolby Vision Profile 8.1`, and a typed `CMv4.0` nothing
+when it reads `CMv4.0 (ST-DL)`. Five of the nine fields are counted by
+`/library/stats`; the other four — HDR detail, enhancement layer, encoder, CM
+version — are read off a projection of the library, four short strings an entry,
+which comes back as a `304` on every later open. A field the library holds
+nothing for is left out rather than offered as a box that can only come back
+empty.
+
 Every range is typed in the unit a person thinks in (minutes, gigabytes,
 megabits, a year, a score) and converted to what the API stores. "Modified in
-the last N days" is the `min_mtime` range, spelled the way it is meant.
+the last N days" is the `min_mtime` range, spelled the way it is meant. Typing
+does not fetch: the sheet waits for the pause, so `600` is one request rather
+than three.
+
+**The artwork.** An entry carries two images. `portrait_url` is the upright 2:3
+cover, and that is what every tile and every poster slot in this app asks for —
+it is laid out for that shape, and a backdrop cropped to it loses most of the
+frame. `poster_url` is the 16:9 backdrop, which is what the web interface is
+built around; here it is the header image at the top of a title's screen, faded
+into the page with the cover on top of it. A title with no cover falls back to
+its backdrop rather than showing a blank, and an instance too old to know
+`portrait_url` behaves exactly that way throughout.
 
 **The order** includes the combined modes: HDR format + audio track, HDR format
 + video bitrate, HDR format + audio bitrate, audio track + audio bitrate. Those
@@ -140,11 +157,11 @@ All of it.
 | Endpoint | Where it shows up |
 |----------|-------------------|
 | `GET /api/v1` | **Test connection** in the settings |
-| `GET /api/v1/library` | The library, with `search`, every exact filter, every `min_`/`max_` range, `sort` (single and combined), `order`, `limit`/`offset`, `fields` and `updated_since` |
+| `GET /api/v1/library` | The library, with `search`, every exact filter, every `min_`/`max_` range, `sort` (single and combined), `order`, `limit`/`offset`, `fields` and `updated_since`. Also read once as a projection of four fields, to fill the filter sheet with the values the library really holds |
 | `GET /api/v1/library/stats` | The statistics screen, and the values the filter sheet offers |
 | `GET /api/v1/entries` | One title's own screen |
 | `GET /api/v1/files` | The files screen |
-| `GET /api/v1/posters/<name>` | Every cover, at `?w=160/320/480/640` |
+| `GET /api/v1/posters/<name>` | Every cover and backdrop, at `?w=160/320/480/640` |
 | `GET /api/v1/scan/status` | The scan screen when it opens |
 | `GET /api/v1/events` | Live progress and changes on every screen |
 | `POST /api/v1/scan` | **Scan everything new** |

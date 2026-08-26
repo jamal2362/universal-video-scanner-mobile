@@ -69,6 +69,7 @@
     <!-- Filters -->
     <string name="filter_title">Filter library</string>
     <string name="filter_exact">Exact match</string>
+    <string name="filter_exact_hint">Has to match the stored value exactly</string>
     <string name="filter_ranges">Ranges</string>
     <string name="filter_min">from</string>
     <string name="filter_max">to</string>

@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jamal2367.uvsmobile.data.model.LibraryEntry
-import com.jamal2367.uvsmobile.ui.LocalPosterServer
 import com.jamal2367.uvsmobile.ui.components.HdrBadge
 import com.jamal2367.uvsmobile.ui.components.MetaChip
 import com.jamal2367.uvsmobile.ui.components.PosterImage
@@ -39,8 +38,7 @@ fun EntryGridCard(
     Column(modifier = modifier.clickable(onClick = onClick)) {
         Box {
             PosterImage(
-                posterUrl = entry.posterUrl,
-                server = LocalPosterServer.current,
+                entry = entry,
                 width = posterWidth,
                 contentDescription = entry.displayTitle,
                 modifier = Modifier
@@ -108,8 +106,7 @@ fun EntryListRow(
     ) {
         Row(modifier = Modifier.padding(10.dp)) {
             PosterImage(
-                posterUrl = entry.posterUrl,
-                server = LocalPosterServer.current,
+                entry = entry,
                 width = posterWidth,
                 contentDescription = entry.displayTitle,
                 modifier = Modifier

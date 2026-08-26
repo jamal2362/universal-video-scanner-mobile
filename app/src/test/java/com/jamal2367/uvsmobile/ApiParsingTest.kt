@@ -54,7 +54,8 @@ class ApiParsingTest {
                 "file_size": 78000000000,
                 "mtime": 1750000000,
                 "updated_at": 1750000900.5,
-                "poster_url": "/poster/438631.jpg",
+                "poster_url": "/poster/tmdb_438631.jpg",
+                "portrait_url": "/poster/tmdb_portrait_438631.jpg",
                 "tmdb_id": 438631,
                 "tmdb_title": "Dune",
                 "tmdb_year": "2021",
@@ -94,6 +95,20 @@ class ApiParsingTest {
         assertEquals(2, entry.tmdbCast.size)
         assertTrue(entry.hdrMetadata!!.hasRpu)
         assertTrue(entry.hdrMetadata!!.hasActiveArea)
+        assertEquals("/poster/tmdb_portrait_438631.jpg", entry.portraitUrl)
+    }
+
+    @Test
+    fun `an instance too old to know the cover still reads`() {
+        // portrait_url arrived with the mobile app; an older scanner sends only
+        // the backdrop, and an entry has to come back whole either way.
+        val entry = json.decodeFromString(
+            LibraryEntry.serializer(),
+            """{"path": "/media/A.mkv", "poster_url": "/poster/tmdb_1.jpg"}""",
+        )
+
+        assertEquals("/poster/tmdb_1.jpg", entry.posterUrl)
+        assertNull(entry.portraitUrl)
     }
 
     @Test
