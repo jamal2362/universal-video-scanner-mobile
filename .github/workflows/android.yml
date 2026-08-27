@@ -22,9 +22,10 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      # The build runs on 21 because that is what AGP 9 and Gradle 9 are built
-      # against; 17 is below what the toolchain resolves and the run dies
-      # during configuration rather than in a task anyone can read.
+      # 21 rather than the 17 that was here: 17 does build this project, but
+      # it is a version behind what AGP 9 and Gradle 9 are developed against
+      # and behind the JDK the app is built with locally, and a toolchain CI
+      # does not share is a class of failure nobody can reproduce.
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -34,10 +35,12 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Named in full, because the runner image does not carry a platform this
-      # new and the package is not called what `compileSdk = 37` reads like:
-      # SDK 37 ships as `platforms;android-37.0`, and left to find it itself
-      # the build asks for `platforms;android-37`, which does not exist.
+      # Named in full rather than left to the build to fetch on its own. The
+      # runner image carries nothing as new as 37, so every run downloads it
+      # anyway; naming it puts that where a failure is legible and pins which
+      # package it is. It is worth pinning: SDK 37 ships as
+      # `platforms;android-37.0`, not as the `android-37` that `compileSdk =
+      # 37` reads like.
       - name: Install the Android SDK the build compiles against
         uses: android-actions/setup-android@v3
         with:
