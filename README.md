@@ -237,9 +237,32 @@ brings both. On a bare machine point Gradle at the SDK:
 echo "sdk.dir=/path/to/android-sdk" > local.properties
 ```
 
-`assembleRelease` produces an unsigned APK; add your own signing config to
-`app/build.gradle.kts` to sign it. The release build is shrunk and obfuscated,
-and the rules for that are in `app/proguard-rules.pro`.
+`assembleRelease` is what CI ships. It is shrunk and obfuscated by R8, and the
+rules for that are in `app/proguard-rules.pro`.
+
+It signs with whichever release key it can find, and with the debug key when it
+finds none -- so the task always yields an installable APK, but only a build
+with the real key upgrades an existing release install. The key can come from
+either place, the environment winning over the file:
+
+| Environment         | `keystore.properties` at the repository root |
+| ------------------- | -------------------------------------------- |
+| `KEYSTORE_FILE`     | `storeFile`                                  |
+| `KEYSTORE_PASSWORD` | `storePassword`                              |
+| `KEY_ALIAS`         | `keyAlias`                                   |
+| `KEY_PASSWORD`      | `keyPassword`                                |
+
+A relative `storeFile` is read from the repository root, so `release.jks` next
+to `keystore.properties` is just `storeFile=release.jks`.
+
+`keystore.properties` and `*.jks` are gitignored, so a local release build is a
+matter of writing that file and pointing `storeFile` at the keystore.
+
+GitHub Actions takes the environment route, from four repository secrets:
+`KEYSTORE_BASE64` (the keystore itself, `base64 -w0 release.jks`),
+`KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`. With those unset the
+workflow still runs and still publishes -- the APK is just debug-signed, and
+the release notes say so.
 
 ## 9. Project Layout
 
