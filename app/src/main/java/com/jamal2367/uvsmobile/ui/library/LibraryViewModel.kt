@@ -42,6 +42,8 @@ data class LibraryUiState(
     val filterOptions: FilterOptions = FilterOptions(),
     val layout: LibraryLayout = LibraryLayout.GRID,
     val posterWidth: Int = 320,
+    /** How many covers stand side by side, as the settings were left. */
+    val gridColumns: Int = AppSettings.DEFAULT_GRID_COLUMNS,
     /** How many entries fit on a page, or null when the whole library is one. */
     val pageSize: Int? = null,
     /** Which page is on screen, counted from zero. */
@@ -166,6 +168,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 _state.value = _state.value.copy(
                     layout = updated.libraryLayout,
                     posterWidth = updated.posterWidth,
+                    gridColumns = updated.gridColumns,
                     notConfigured = !updated.isConfigured,
                     pageSize = updated.entriesPerPage,
                 )

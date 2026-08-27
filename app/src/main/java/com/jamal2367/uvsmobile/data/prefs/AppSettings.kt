@@ -83,6 +83,15 @@ data class AppSettings(
     val libraryFilters: Map<FilterField, String> = emptyMap(),
     val libraryRanges: Map<RangeField, RangeValue> = emptyMap(),
     val posterWidth: Int = 320,
+    /**
+     * How many covers stand side by side in the library's grid.
+     *
+     * A count rather than a width, because that is the thing anyone looking at
+     * the screen is actually deciding: three is what fits a phone comfortably,
+     * two makes the covers large enough to read a title off, four fits more of
+     * the library on screen at once.
+     */
+    val gridColumns: Int = DEFAULT_GRID_COLUMNS,
     val pageSize: Int = PAGE_SIZE_ALL,
     val liveUpdates: Boolean = true,
 ) {
@@ -115,6 +124,11 @@ data class AppSettings(
 
     companion object {
         val POSTER_WIDTHS = listOf(160, 320, 480, 640)
+
+        /** What the grid holds until someone says otherwise. */
+        const val DEFAULT_GRID_COLUMNS = 3
+
+        val GRID_COLUMNS = listOf(2, 3, 4)
 
         /** The page size that means "do not page at all". */
         const val PAGE_SIZE_ALL = 0

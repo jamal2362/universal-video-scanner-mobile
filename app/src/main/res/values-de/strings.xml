@@ -31,7 +31,7 @@
     <string name="server_active_secondary">Mit dem externen Server verbunden</string>
 
     <!-- Bibliothek -->
-    <string name="library_search_hint">Titel, Codec, Auflösung…</string>
+    <string name="library_search_hint">Suchen…</string>
     <string name="library_empty">Die Bibliothek ist leer. Starte einen Scan, um sie zu füllen.</string>
     <string name="library_no_results">Kein Eintrag passt zu dieser Suche.</string>
     <string name="library_sort">Sortierung</string>
@@ -105,6 +105,7 @@
     <string name="field_tmdb_id">TMDB-ID</string>
     <string name="field_imdb_id">IMDb-ID</string>
     <string name="field_tmdb_year">Jahr</string>
+    <string name="field_top250">IMDb-Top-250-Platz</string>
     <string name="field_directors">Regie</string>
     <string name="field_cast">Darsteller</string>
 
@@ -233,6 +234,8 @@
     <string name="settings_library">Bibliothek</string>
     <string name="settings_poster_width">Posterbreite</string>
     <string name="settings_poster_width_desc">Welche verkleinerte Kopie beim Server angefragt wird</string>
+    <string name="settings_grid_columns">Poster pro Reihe</string>
+    <string name="settings_grid_columns_desc">Wie viele Cover im Raster nebeneinander stehen</string>
     <string name="settings_page_size">Einträge pro Seite</string>
     <string name="settings_page_size_desc">Wie viele Einträge auf eine Seite der Bibliothek passen. Bei „Alle“ steht die ganze Bibliothek auf einer Seite, es gibt dann nichts zu blättern.</string>
     <string name="settings_page_size_all">Alle</string>
@@ -242,6 +245,13 @@
     <string name="settings_about_version">App-Version</string>
     <string name="settings_about_api">API</string>
     <string name="settings_about_project">Projekt</string>
+
+    <!-- Update-Prüfung -->
+    <string name="update_available">%1$s ist verfügbar</string>
+    <string name="update_show">Zeigen</string>
+
+    <!-- Die App verlassen -->
+    <string name="exit_confirm">Zum Beenden erneut zurück drücken</string>
     <string name="settings_invalid_host">Trage einen Hostnamen oder eine IP-Adresse ein.</string>
     <string name="settings_invalid_port">Der Port muss zwischen 1 und 65535 liegen.</string>
 

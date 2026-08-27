@@ -1,36 +1,60 @@
 package com.jamal2367.uvsmobile.ui
 
+import android.content.Intent
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.jamal2367.uvsmobile.BuildConfig
+import com.jamal2367.uvsmobile.R
 import com.jamal2367.uvsmobile.data.prefs.AppSettings
 import com.jamal2367.uvsmobile.data.prefs.ServerConfig
+import com.jamal2367.uvsmobile.data.remote.ReleaseId
 import com.jamal2367.uvsmobile.di.AppContainer
 import com.jamal2367.uvsmobile.ui.navigation.TopLevelDestination
 import com.jamal2367.uvsmobile.ui.navigation.UvsNavHost
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Which instance a poster should be fetched from.
@@ -59,14 +83,37 @@ fun UvsApp(container: AppContainer, settings: AppSettings) {
     // holding the phone cannot comfortably get to.
     val useRail = LocalConfiguration.current.smallestScreenWidthDp >= 600
 
+    // Belongs to the shell rather than to a screen: what it carries - a newer
+    // release - is about the app itself and would otherwise disappear the
+    // moment someone changed tabs.
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val backStackEntry by navController.currentBackStackEntryAsState()
+
+    // Back on the first screen with nothing to return to is back out of the
+    // app, and that is the only place the second press is asked for. Anywhere
+    // else the navigation still has somewhere to go, and it goes there.
+    val atRoot = backStackEntry != null && navController.previousBackStackEntry == null
+
+    UpdateCheck(container, snackbarHostState)
+    DoubleBackToExit(enabled = atRoot)
+
     CompositionLocalProvider(LocalPosterServer provides posterServer) {
         if (useRail) {
             Row(Modifier.fillMaxSize()) {
                 UvsNavigationRail(navController)
-                UvsNavHost(
-                    navController = navController,
-                    modifier = Modifier.weight(1f),
-                )
+                Box(Modifier.weight(1f)) {
+                    UvsNavHost(navController = navController)
+                    // No scaffold on this branch to hand the host to, so it is
+                    // placed where one would have put it: along the bottom, and
+                    // clear of the system's gesture bar.
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .windowInsetsPadding(WindowInsets.navigationBars),
+                    )
+                }
             }
         } else {
             Scaffold(
@@ -77,6 +124,9 @@ fun UvsApp(container: AppContainer, settings: AppSettings) {
                 // status bar's height too low.
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 bottomBar = { UvsNavigationBar(navController) },
+                // Above the navigation bar rather than over it, which is what
+                // the scaffold does with a host it is given.
+                snackbarHost = { SnackbarHost(snackbarHostState) },
             ) { padding ->
                 UvsNavHost(
                     navController = navController,
@@ -85,6 +135,94 @@ fun UvsApp(container: AppContainer, settings: AppSettings) {
                         .consumeWindowInsets(padding),
                 )
             }
+        }
+    }
+}
+
+/**
+ * Asks GitHub once per launch whether a newer release has been published, and
+ * offers a way to it.
+ *
+ * A snackbar rather than a dialog: nobody opened the app to be told about the
+ * app, so it says its piece along the bottom, waits, and goes. It is late on
+ * purpose - the library is what someone opened this for, and the first seconds
+ * belong to the first page of it.
+ */
+@Composable
+private fun UpdateCheck(container: AppContainer, snackbarHostState: SnackbarHostState) {
+    val context = LocalContext.current
+    // The message names a release that is not known until the answer comes
+    // back, so it is formatted rather than read at composition - through the
+    // resources of the composition, which follow a configuration change, and
+    // not through the context's, which do not.
+    val resources = LocalResources.current
+    val apiUrl = stringResource(R.string.update_check_url)
+    val releasesUrl = stringResource(R.string.update_releases_url)
+    val showLabel = stringResource(R.string.update_show)
+
+    // Survives a rotation, so turning the phone over does not ask GitHub the
+    // same question again - or answer it a second time.
+    var checked by rememberSaveable { mutableStateOf(false) }
+
+    // Keyed on nothing, so noting that the check has run does not restart the
+    // very effect that is running it.
+    LaunchedEffect(Unit) {
+        if (checked) return@LaunchedEffect
+        checked = true
+        delay(UPDATE_CHECK_DELAY_MS.milliseconds)
+
+        val update = container.updateChecker.findNewerRelease(
+            apiUrl = apiUrl,
+            current = ReleaseId.of(BuildConfig.VERSION_NAME, "build-${BuildConfig.BUILD_NUMBER}"),
+            fallbackUrl = releasesUrl,
+        ) ?: return@LaunchedEffect
+
+        val result = snackbarHostState.showSnackbar(
+            message = resources.getString(R.string.update_available, update.name),
+            actionLabel = showLabel,
+            duration = SnackbarDuration.Long,
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            runCatching {
+                context.startActivity(Intent(Intent.ACTION_VIEW, update.url.toUri()))
+            }
+        }
+    }
+}
+
+/**
+ * Makes leaving the app take two presses of back rather than one.
+ *
+ * The library is one tab of five and back out of it is back out of everything,
+ * which is a long way to fall for a thumb that meant to close a sheet. The
+ * second press has to come while the first is still being announced; after
+ * that the count starts again.
+ */
+@Composable
+private fun DoubleBackToExit(enabled: Boolean) {
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    val message = stringResource(R.string.exit_confirm)
+
+    // Deliberately not saved across a rotation: an app turned over between the
+    // two presses is not being left, and half a gesture from before should not
+    // be waiting to close it.
+    var armed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(armed) {
+        if (!armed) return@LaunchedEffect
+        delay(EXIT_CONFIRM_WINDOW_MS.milliseconds)
+        armed = false
+    }
+
+    // Back somewhere else on the stack is a screen to return to, and the
+    // navigation's own handler - added later, so asked first - takes it.
+    BackHandler(enabled = enabled) {
+        if (armed) {
+            activity?.finish()
+        } else {
+            armed = true
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 }
@@ -162,3 +300,15 @@ private fun NavHostController.switchTo(destination: TopLevelDestination) {
         restoreState = true
     }
 }
+
+/** How long the library gets to itself before the update check speaks up. */
+private const val UPDATE_CHECK_DELAY_MS = 5_000L
+
+/**
+ * How long the second press of back has to arrive in.
+ *
+ * The same couple of seconds the toast that asks for it is on screen: the
+ * window closing while the message still stands would be a promise the app
+ * does not keep.
+ */
+private const val EXIT_CONFIRM_WINDOW_MS = 2_000L

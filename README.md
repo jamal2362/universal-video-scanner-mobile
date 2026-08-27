@@ -117,7 +117,7 @@ the stream walks the list itself when an address will not open at all.
 | **Statistics** | The library in numbers; tap a row to open it filtered in the library |
 | **Files** | The media directory, what is scanned and what is not, and the two ways to change that |
 | **Scan** | Progress, start, stop, the live activity, and emptying the library |
-| **Settings** | The two servers, saved when you say so, the connection mode, the appearance and how many entries a page holds |
+| **Settings** | The two servers, saved when you say so, the connection mode, the appearance, how many posters stand in a row and how many entries a page holds |
 
 **The filter sheet** offers every field the API narrows by, and every one of
 them as the values your library actually holds. That is not a nicety: the API
@@ -145,6 +145,12 @@ into the page with the cover on top of it. A title with no cover falls back to
 its backdrop rather than showing a blank, and an instance too old to know
 `portrait_url` behaves exactly that way throughout.
 
+**Posters per row** is 2, 3 or 4, and 3 unless you say otherwise. It is a
+count rather than a width, because that is what anyone looking at the grid is
+actually deciding: two makes the covers large enough to read a title off the
+artwork, four fits more of the library on the screen at once. It applies to the
+grid only — the list has one entry a row by definition.
+
 **Entries per page** decides whether the library arrives in one piece or in
 windows. At **All** — which is how it starts — the whole answer to the current
 question comes down at once and scrolls as one list; at 30, 60, 100 or 200 the
@@ -152,6 +158,23 @@ server is asked for that many, and **Back** and **Next** under the library move
 between the pages. Either way it is `limit`/`offset` doing the work on the
 server, and `total` is what makes "page 3 of 12" knowable without asking for
 the rest.
+
+**Leaving the app** takes two presses of back. The library is one tab of five
+and back out of it is back out of everything, which is a long way to fall for a
+thumb that meant to close a sheet — so the first press says so and the second,
+within a couple of seconds, closes the app. Back anywhere else on the stack
+still just goes back.
+
+**The update check** asks GitHub for the newest release a few seconds after
+launch — long enough that the first page of the library has the screen to
+itself — and says so along the bottom when this build is behind one, with a way
+straight to the release. It fails silently: nobody asked for it, so a phone with
+no way out to the internet never hears about it. What it compares is the release
+the build came from: the workflow publishes a build per commit as `build-<run
+number>`, so the version name alone cannot tell two of them apart. CI bakes its
+run number into the APK as `BuildConfig.BUILD_NUMBER`; a build assembled from a
+checkout carries `0`, knows of no run behind it, and is only ever told about a
+newer *version*.
 
 **The addresses** are typed on the settings screen and stored when **Save** is
 tapped, not while they are being typed: a host name is wrong for as long as it

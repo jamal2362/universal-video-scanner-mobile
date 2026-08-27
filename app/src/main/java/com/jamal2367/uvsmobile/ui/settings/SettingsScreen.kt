@@ -458,6 +458,26 @@ private fun LibraryCard(settings: AppSettings, viewModel: SettingsViewModel) {
         }
 
         Text(
+            text = stringResource(R.string.settings_grid_columns),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        Text(
+            text = stringResource(R.string.settings_grid_columns_desc),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AppSettings.GRID_COLUMNS.forEach { columns ->
+                FilterChip(
+                    selected = settings.gridColumns == columns,
+                    onClick = { viewModel.setGridColumns(columns) },
+                    label = { Text(columns.toString()) },
+                )
+            }
+        }
+
+        Text(
             text = stringResource(R.string.settings_page_size),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp),

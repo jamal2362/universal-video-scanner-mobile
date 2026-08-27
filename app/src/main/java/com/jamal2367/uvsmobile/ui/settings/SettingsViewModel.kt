@@ -127,6 +127,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { repository.setPosterWidth(width) }
     }
 
+    fun setGridColumns(columns: Int) {
+        viewModelScope.launch { repository.setGridColumns(columns) }
+    }
+
     fun setPageSize(size: Int) {
         viewModelScope.launch { repository.setPageSize(size) }
     }

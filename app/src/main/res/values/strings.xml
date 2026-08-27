@@ -31,7 +31,7 @@
     <string name="server_active_secondary">Connected to the remote server</string>
 
     <!-- Library -->
-    <string name="library_search_hint">Title, codec, resolution…</string>
+    <string name="library_search_hint">Search…</string>
     <string name="library_empty">The library is empty. Start a scan to fill it.</string>
     <string name="library_no_results">No entry matches this search.</string>
     <string name="library_sort">Sort</string>
@@ -105,6 +105,7 @@
     <string name="field_tmdb_id">TMDB ID</string>
     <string name="field_imdb_id">IMDb ID</string>
     <string name="field_tmdb_year">Year</string>
+    <string name="field_top250">IMDb Top 250 rank</string>
     <string name="field_directors">Directed by</string>
     <string name="field_cast">Cast</string>
 
@@ -233,6 +234,8 @@
     <string name="settings_library">Library</string>
     <string name="settings_poster_width">Poster width</string>
     <string name="settings_poster_width_desc">Which resized copy the server is asked for</string>
+    <string name="settings_grid_columns">Posters per row</string>
+    <string name="settings_grid_columns_desc">How many covers stand side by side in the grid</string>
     <string name="settings_page_size">Entries per page</string>
     <string name="settings_page_size_desc">How many entries one page of the library holds. At “All” the whole library is on one page and there is nothing to page through.</string>
     <string name="settings_page_size_all">All</string>
@@ -242,6 +245,15 @@
     <string name="settings_about_version">App version</string>
     <string name="settings_about_api">API</string>
     <string name="settings_about_project">Project</string>
+
+    <!-- Update check -->
+    <string name="update_available">%1$s is available</string>
+    <string name="update_show">Show</string>
+    <string name="update_releases_url" translatable="false">https://github.com/jamal2362/universal-video-scanner-mobile/releases/latest</string>
+    <string name="update_check_url" translatable="false">https://api.github.com/repos/jamal2362/universal-video-scanner-mobile/releases/latest</string>
+
+    <!-- Leaving the app -->
+    <string name="exit_confirm">Press back again to exit</string>
     <string name="settings_invalid_host">Enter a host name or IP address.</string>
     <string name="settings_invalid_port">The port has to be between 1 and 65535.</string>
 

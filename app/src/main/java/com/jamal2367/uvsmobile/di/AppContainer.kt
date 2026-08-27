@@ -13,6 +13,7 @@ import com.jamal2367.uvsmobile.data.remote.FailoverInterceptor
 import com.jamal2367.uvsmobile.data.remote.ServerRouter
 import com.jamal2367.uvsmobile.data.remote.LiveEvent
 import com.jamal2367.uvsmobile.data.remote.SseClient
+import com.jamal2367.uvsmobile.data.remote.UpdateChecker
 import com.jamal2367.uvsmobile.data.remote.UvsApi
 import com.jamal2367.uvsmobile.data.repository.ScannerRepository
 import kotlinx.coroutines.CoroutineScope
@@ -125,6 +126,15 @@ class AppContainer(private val context: Context) {
 
     /** Checks one address in isolation, for the button in the settings. */
     val connectionTester: ConnectionTester by lazy { ConnectionTester(directClient, json) }
+
+    /**
+     * Asks GitHub for the newest release, once per launch.
+     *
+     * On the plain client, like everything that addresses a host of its own:
+     * the failover interceptor exists to retarget requests at whichever
+     * scanner is answering, and github.com is neither of them.
+     */
+    val updateChecker: UpdateChecker by lazy { UpdateChecker(directClient, json) }
 
     private val containerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
