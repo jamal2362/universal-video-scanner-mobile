@@ -267,6 +267,33 @@ private fun DetailContent(
             }
         }
 
+        if (entry.tmdbDirectors.isNotEmpty() || entry.tmdbCast.isNotEmpty()) {
+            SectionCard(title = stringResource(R.string.detail_people)) {
+                if (entry.tmdbDirectors.isNotEmpty()) {
+                    InfoRow(
+                        stringResource(R.string.field_directors),
+                        entry.tmdbDirectors.joinToString(", "),
+                    )
+                }
+                if (entry.tmdbCast.isNotEmpty()) {
+                    Text(
+                        text = stringResource(R.string.field_cast),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    // A name is read as one thing, so the gap between two of
+                    // them has to be wider than the gap inside either - and a
+                    // wrapped line of them needs the same room downwards.
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        entry.tmdbCast.forEach { MetaChip(text = it, outlined = true) }
+                    }
+                }
+            }
+        }
+
         RatingsCard(entry)
 
         SectionCard(title = stringResource(R.string.detail_video)) {
@@ -294,33 +321,6 @@ private fun DetailContent(
         }
 
         HdrMetadataCard(entry.hdrMetadata)
-
-        if (entry.tmdbDirectors.isNotEmpty() || entry.tmdbCast.isNotEmpty()) {
-            SectionCard(title = stringResource(R.string.detail_people)) {
-                if (entry.tmdbDirectors.isNotEmpty()) {
-                    InfoRow(
-                        stringResource(R.string.field_directors),
-                        entry.tmdbDirectors.joinToString(", "),
-                    )
-                }
-                if (entry.tmdbCast.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.field_cast),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    // A name is read as one thing, so the gap between two of
-                    // them has to be wider than the gap inside either - and a
-                    // wrapped line of them needs the same room downwards.
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        entry.tmdbCast.forEach { MetaChip(text = it, outlined = true) }
-                    }
-                }
-            }
-        }
 
         SectionCard(title = stringResource(R.string.detail_file)) {
             InfoRow(stringResource(R.string.field_filename), entry.filename)
