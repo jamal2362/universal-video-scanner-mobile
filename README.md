@@ -226,16 +226,26 @@ git clone https://github.com/jamal2362/universal-video-scanner-mobile.git
 cd universal-video-scanner-mobile
 
 ./gradlew testDebugUnitTest    # the unit tests
-./gradlew lintDebug            # Android Lint
+./gradlew lintRelease          # Android Lint, on the configuration that ships
 ./gradlew assembleDebug        # app/build/outputs/apk/debug/app-debug.apk
 ```
 
-JDK 17 and an Android SDK with platform 35 are all it needs; Android Studio
-brings both. On a bare machine point Gradle at the SDK:
+`lintRelease` rather than `lintDebug` because that is what CI runs, and lint on
+the release configuration sees the minification rules the debug one does not.
+
+The one thing to bring is an Android SDK with platform 37 -- the package is
+`platforms;android-37.0`, not the `android-37` that `compileSdk = 37` reads
+like -- and Android Studio brings it. On a bare machine point Gradle at the
+SDK:
 
 ```bash
 echo "sdk.dir=/path/to/android-sdk" > local.properties
 ```
+
+The JDK it fetches for itself. `gradle/gradle-daemon-jvm.properties` pins the
+daemon to JetBrains Runtime 25, which Gradle downloads into `~/.gradle/jdks` on
+the first build; launching the wrapper takes any JDK 17 or newer, and CI uses
+21. So no JDK needs installing to match the build -- only one to start it.
 
 `assembleRelease` is what CI ships. It is shrunk and obfuscated by R8, and the
 rules for that are in `app/proguard-rules.pro`.
