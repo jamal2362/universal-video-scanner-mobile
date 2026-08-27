@@ -1,5 +1,8 @@
 package com.jamal2367.uvsmobile.data.prefs
 
+import com.jamal2367.uvsmobile.data.model.FilterField
+import com.jamal2367.uvsmobile.data.model.RangeField
+import com.jamal2367.uvsmobile.data.model.RangeValue
 import com.jamal2367.uvsmobile.data.model.SortOption
 import com.jamal2367.uvsmobile.data.model.SortOrder
 
@@ -68,6 +71,17 @@ data class AppSettings(
      */
     val librarySort: SortOption = SortOption.FILENAME,
     val librarySortOrder: SortOrder = SortOption.FILENAME.defaultOrder,
+    /**
+     * The narrowing the library was last looked at through.
+     *
+     * Kept for the same reason the order is: someone who only ever wants their
+     * Dolby Vision titles has said so once. The search term is not kept with
+     * it - that is a question asked about one moment, not a way of looking at
+     * the library, and a library that opens already searching for something
+     * typed yesterday looks empty for no reason anyone can see.
+     */
+    val libraryFilters: Map<FilterField, String> = emptyMap(),
+    val libraryRanges: Map<RangeField, RangeValue> = emptyMap(),
     val posterWidth: Int = 320,
     val pageSize: Int = PAGE_SIZE_ALL,
     val liveUpdates: Boolean = true,

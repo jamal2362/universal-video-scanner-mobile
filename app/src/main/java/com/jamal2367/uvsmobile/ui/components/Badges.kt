@@ -55,10 +55,11 @@ fun MetaChip(
 /**
  * How a title is graded, in one chip.
  *
- * Dolby Vision names its enhancement layer, because FEL and MEL are the whole
- * point of the distinction; anything else shows the format the scanner
- * determined, and a title it could not determine shows anything at all rather
- * than a confident "SDR".
+ * The badge says the one thing that sets this title apart from the next -
+ * FEL, MEL, 8.1, 5.0, HDR10, HDR10+, SDR - and no more. "Dolby Vision" in
+ * front of a layer is a word every Dolby Vision title on the screen carries,
+ * which is a lot of a small chip spent on nothing; the colour already says
+ * which family it belongs to.
  */
 @Composable
 fun HdrBadge(entry: LibraryEntry, modifier: Modifier = Modifier) {
@@ -67,17 +68,44 @@ fun HdrBadge(entry: LibraryEntry, modifier: Modifier = Modifier) {
     MetaChip(text = label, container = container, content = content, modifier = modifier)
 }
 
-/** The label an HDR badge carries, or null when the grade is unknown. */
+/**
+ * The label an HDR badge carries, or null when the grade is unknown.
+ *
+ * Dolby Vision is named by what distinguishes one from another: the
+ * enhancement layer where there is one - a profile 7 disc is a FEL or a MEL
+ * before it is anything else - and otherwise the profile the scanner read,
+ * 8.1 or 5.0. Anything else is the format itself, which is already the short
+ * name everyone uses for it.
+ */
 fun hdrLabel(entry: LibraryEntry): String? {
     val format = entry.hdrFormat?.trim().orEmpty()
     if (format.isEmpty() || format.equals("Unknown", ignoreCase = true)) return null
 
+    val detail = entry.hdrDetail?.trim().orEmpty()
     if (format.contains("Dolby Vision", ignoreCase = true)) {
-        val layer = entry.elType?.trim().orEmpty()
-        return if (layer.isNotEmpty()) "DV $layer" else "DV"
+        entry.elType?.trim()?.takeIf { it.isNotEmpty() }?.let { return it.uppercase() }
+        return dolbyVisionProfile(detail) ?: "DV"
     }
+
+    // The plus is the whole distinction, and the scanner does not always
+    // carry it up into the format: a title graded HDR10+ is filed under
+    // "HDR10" with the detail line saying which it really is.
+    if (detail.contains("HDR10+", ignoreCase = true)) return "HDR10+"
     return format
 }
+
+/**
+ * The profile out of a detail line like "Dolby Vision Profile 8.1".
+ *
+ * Written with the decimal a profile is always spoken with - profile 5 reads
+ * "5.0" - so a column of badges lines up rather than mixing "5" with "8.1".
+ */
+private fun dolbyVisionProfile(detail: String): String? {
+    val number = PROFILE_PATTERN.find(detail)?.groupValues?.get(1) ?: return null
+    return if (number.contains('.')) number else "$number.0"
+}
+
+private val PROFILE_PATTERN = Regex("""Profile\s+(\d+(?:\.\d+)?)""", RegexOption.IGNORE_CASE)
 
 private fun hdrColors(entry: LibraryEntry): Pair<Color, Color> {
     val format = entry.hdrFormat?.lowercase().orEmpty()
