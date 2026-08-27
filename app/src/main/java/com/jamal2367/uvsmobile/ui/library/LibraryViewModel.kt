@@ -141,6 +141,15 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private var pageSizeKnown = false
 
     /**
+     * Whether the stored way of looking at the library has been put back yet.
+     *
+     * Only the first settings to arrive carry it: after that the order and the
+     * narrowing on screen are the newer of the two, and a later emission - the
+     * write that stored them, among others - would put the old ones back.
+     */
+    private var queryRestored = false
+
+    /**
      * The newest change stamp this screen has seen.
      *
      * What `updated_since` is asked with: a scan of a thousand files publishes a
@@ -188,6 +197,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             .debounce { (index, _) -> if (index == 0) 0L else SERVER_CHANGE_DEBOUNCE_MS }
             .onEach { (_, updated) ->
                 settings = updated
+                restoreQuery(updated)
                 refresh()
                 loadFilterOptions()
             }
@@ -230,31 +240,70 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
      * wanted. The two buttons above the list still turn it back.
      */
     fun setSort(sort: SortOption) {
+        viewModelScope.launch {
+            container.settingsRepository.setLibrarySort(sort, sort.defaultOrder)
+        }
         updateQuery { it.copy(sort = sort, order = sort.defaultOrder) }
     }
 
     fun setOrder(order: SortOrder) {
+        viewModelScope.launch { container.settingsRepository.setLibrarySortOrder(order) }
         updateQuery { it.copy(order = order) }
     }
 
+    /**
+     * Put the library back the way it was last left: the order, and the
+     * narrowing it was being read through.
+     *
+     * Done here rather than where the layout is read, because this is the one
+     * place the first page is asked for: both are in the query before the
+     * request goes out, so a launch costs one call rather than the whole
+     * library fetched in filename order and thrown away.
+     */
+    private fun restoreQuery(stored: AppSettings) {
+        if (queryRestored) return
+        queryRestored = true
+
+        val restored = _state.value.query.copy(
+            sort = stored.librarySort,
+            order = stored.librarySortOrder,
+            filters = stored.libraryFilters,
+            ranges = stored.libraryRanges,
+        )
+        if (restored == _state.value.query) return
+        _state.value = _state.value.copy(query = restored)
+    }
+
     fun setFilter(field: FilterField, value: String?) {
-        updateQuery { query ->
+        val updated = updateQuery { query ->
             val filters = query.filters.toMutableMap()
             if (value.isNullOrBlank()) filters.remove(field) else filters[field] = value
             query.copy(filters = filters)
         }
+        persistNarrowing(updated)
     }
 
     fun setRange(field: RangeField, range: RangeValue) {
-        updateQuery { query ->
+        val updated = updateQuery { query ->
             val ranges = query.ranges.toMutableMap()
             if (range.isEmpty) ranges.remove(field) else ranges[field] = range
             query.copy(ranges = ranges)
         }
+        persistNarrowing(updated)
     }
 
     fun clearNarrowing() {
-        updateQuery { it.copy(filters = emptyMap(), ranges = emptyMap(), search = "") }
+        val updated = updateQuery {
+            it.copy(filters = emptyMap(), ranges = emptyMap(), search = "")
+        }
+        persistNarrowing(updated)
+    }
+
+    /** Store the narrowing, so the next launch opens on the same library. */
+    private fun persistNarrowing(query: LibraryQuery) {
+        viewModelScope.launch {
+            container.settingsRepository.setLibraryNarrowing(query.filters, query.ranges)
+        }
     }
 
     fun setLayout(layout: LibraryLayout) {
@@ -384,12 +433,14 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         _state.value = _state.value.copy(error = null)
     }
 
-    private fun updateQuery(transform: (LibraryQuery) -> LibraryQuery) {
+    /** Ask a different question of the library, and answer with the one asked. */
+    private fun updateQuery(transform: (LibraryQuery) -> LibraryQuery): LibraryQuery {
         val updated = transform(_state.value.query)
-        if (updated == _state.value.query) return
+        if (updated == _state.value.query) return updated
         // A different question has a different first page.
         _state.value = _state.value.copy(query = updated, page = 0)
         refresh()
+        return updated
     }
 
     /**

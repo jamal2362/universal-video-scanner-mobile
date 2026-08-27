@@ -114,7 +114,7 @@
     <string name="detail_audio">Audio</string>
     <string name="detail_hdr_metadata">HDR metadata</string>
     <string name="detail_ratings">Ratings</string>
-    <string name="detail_people">Cast &amp; crew</string>
+    <string name="detail_people">Director &amp; cast</string>
     <string name="detail_file">File</string>
     <string name="detail_rescan">Rescan</string>
     <string name="detail_rescan_running">Rescanning…</string>

@@ -106,7 +106,7 @@
     <string name="field_imdb_id">IMDb-ID</string>
     <string name="field_tmdb_year">Jahr</string>
     <string name="field_directors">Regie</string>
-    <string name="field_cast">Besetzung</string>
+    <string name="field_cast">Darsteller</string>
 
     <!-- Detailbereiche -->
     <string name="detail_overview">Überblick</string>
@@ -114,7 +114,7 @@
     <string name="detail_audio">Audio</string>
     <string name="detail_hdr_metadata">HDR-Metadaten</string>
     <string name="detail_ratings">Wertungen</string>
-    <string name="detail_people">Besetzung &amp; Stab</string>
+    <string name="detail_people">Regie &amp; Darsteller</string>
     <string name="detail_file">Datei</string>
     <string name="detail_rescan">Neu einlesen</string>
     <string name="detail_rescan_running">Wird neu eingelesen…</string>
