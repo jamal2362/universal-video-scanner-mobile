@@ -30,7 +30,6 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Icon
@@ -40,6 +39,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -73,6 +73,7 @@ import com.jamal2367.uvsmobile.ui.components.LoadingState
 import com.jamal2367.uvsmobile.ui.components.MetaChip
 import com.jamal2367.uvsmobile.ui.components.PosterImage
 import com.jamal2367.uvsmobile.ui.components.SectionCard
+import com.jamal2367.uvsmobile.ui.theme.PillShape
 import com.jamal2367.uvsmobile.util.Artwork
 import com.jamal2367.uvsmobile.util.Formatters
 import com.jamal2367.uvsmobile.util.PosterUrls
@@ -270,10 +271,17 @@ private fun DetailContent(
         if (entry.tmdbDirectors.isNotEmpty() || entry.tmdbCast.isNotEmpty()) {
             SectionCard(title = stringResource(R.string.detail_people)) {
                 if (entry.tmdbDirectors.isNotEmpty()) {
-                    InfoRow(
-                        stringResource(R.string.field_directors),
-                        entry.tmdbDirectors.joinToString(", "),
+                    Text(
+                        text = stringResource(R.string.field_directors),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        entry.tmdbDirectors.forEach { MetaChip(text = it, outlined = true) }
+                    }
                 }
                 if (entry.tmdbCast.isNotEmpty()) {
                     Text(
@@ -460,7 +468,10 @@ private fun RatingsCard(entry: LibraryEntry) {
             return@SectionCard
         }
 
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             RatingChip(stringResource(R.string.rating_imdb), Formatters.ratingOutOfTen(entry.imdbRating))
             RatingChip(stringResource(R.string.rating_tmdb), Formatters.ratingOutOfTen(entry.tmdbRating))
             RatingChip(stringResource(R.string.rating_rt), Formatters.percentage(entry.rtRating))
@@ -477,23 +488,34 @@ private fun RatingsCard(entry: LibraryEntry) {
     }
 }
 
+/**
+ * One source's score.
+ *
+ * Drawn rather than borrowed from a chip: it was an AssistChip held disabled
+ * to stop it being pressed, and a disabled chip is drawn at 38% - which says
+ * "unavailable" about a number that is simply not a button. Full strength on
+ * a tonal ground now, which is what it always meant to say.
+ */
 @Composable
 private fun RatingChip(label: String, value: String?) {
     if (value == null) return
-    AssistChip(
-        onClick = {},
-        enabled = false,
-        label = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = label, style = MaterialTheme.typography.labelSmall)
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(start = 6.dp),
-                )
-            }
-        },
-    )
+    Surface(
+        shape = PillShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text = label, style = MaterialTheme.typography.labelSmall)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(start = 6.dp),
+            )
+        }
+    }
 }
 
 /**
