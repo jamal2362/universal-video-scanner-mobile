@@ -36,7 +36,10 @@ enum class RangeField(
     RT_AUDIENCE("rt_audience", R.string.rating_rt_audience, RangeUnit.RATING_100),
     TRAKT_RATING("trakt_rating", R.string.rating_trakt, RangeUnit.RATING_100),
     METACRITIC("metacritic", R.string.rating_metacritic, RangeUnit.RATING_100),
-    IMDB_TOP250("imdb_top250", R.string.rating_top250, RangeUnit.RANK),
+    // Its own label rather than `rating_top250`: that one is the sentence a
+    // title's screen puts a rank into - `IMDb Top 250: #%1$d` - and a filter
+    // row is a name for two boxes, with no rank to put anywhere.
+    IMDB_TOP250("imdb_top250", R.string.field_top250, RangeUnit.RANK),
     MTIME("mtime", R.string.field_mtime, RangeUnit.SECONDS),
 }
 

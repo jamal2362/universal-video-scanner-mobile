@@ -1,9 +1,9 @@
 name: Android
 
+# Started by hand and only by hand. A push is not a request for a build, and
+# a branch that is pushed to a dozen times in an afternoon does not want a
+# release per commit; the button on the Actions tab decides when one is cut.
 on:
-  push:
-    branches: ["**"]
-  pull_request:
   workflow_dispatch:
 
 concurrency:
@@ -76,6 +76,11 @@ jobs:
 
       - name: Assemble the release APK
         env:
+          # The run number is baked into the APK as `BuildConfig.BUILD_NUMBER`
+          # and is what the app's update check compares against the `build-N`
+          # tag of the newest release. Without it a build carries 0 and simply
+          # never reports itself out of date.
+          BUILD_NUMBER: ${{ github.run_number }}
           KEYSTORE_FILE: ${{ steps.signing.outputs.signed == 'true' && format('{0}/release.jks', runner.temp) || '' }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -110,19 +115,15 @@ jobs:
           path: app/build/outputs/mapping/release/
           if-no-files-found: warn
 
-      # Every commit gets one, so there is always an install to hand for the
-      # state of a branch - no run to find, no artifact zip to unpack. A run
-      # started by hand publishes too, so re-cutting a build for a branch that
-      # has had no new commits is one button rather than an empty commit. Only
-      # pull requests are left out: the head of the branch is released anyway,
-      # and a release per PR push would be the same build twice. The tag is the
-      # run number rather than the version, because the version stands still
-      # across dozens of commits and a tag cannot.
+      # Every run that gets this far publishes one, so a build asked for is an
+      # install to hand - no run to find, no artifact zip to unpack. The tag is
+      # the run number rather than the version, because the version stands still
+      # across dozens of builds and a tag cannot.
       #
       # Only the default branch is marked latest: a release cut from a working
-      # branch is a build to try, not the one to point anyone at.
+      # branch is a build to try, not the one to point anyone at - and it is the
+      # latest release that the app's update check reads.
       - name: Publish the build as a release
-        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: build-${{ github.run_number }}

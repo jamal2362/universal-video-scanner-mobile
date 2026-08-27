@@ -81,6 +81,11 @@ class SettingsRepository(private val context: Context) {
         it[KEY_POSTER_WIDTH] = width
     }
 
+    /** How many covers the grid puts side by side, within what it offers. */
+    suspend fun setGridColumns(columns: Int) = edit {
+        it[KEY_GRID_COLUMNS] = columns.coerceIn(GRID_COLUMN_RANGE)
+    }
+
     suspend fun setPageSize(size: Int) = edit {
         it[KEY_PAGE_SIZE] = size
     }
@@ -116,6 +121,11 @@ class SettingsRepository(private val context: Context) {
         libraryFilters = readFilters(),
         libraryRanges = readRanges(),
         posterWidth = this[KEY_POSTER_WIDTH] ?: 320,
+        // Coerced rather than trusted: a count written by a build that offered
+        // a wider choice would otherwise lay the grid out in a way this one has
+        // no chip to get back from.
+        gridColumns = (this[KEY_GRID_COLUMNS] ?: AppSettings.DEFAULT_GRID_COLUMNS)
+            .coerceIn(GRID_COLUMN_RANGE),
         pageSize = this[KEY_PAGE_SIZE] ?: AppSettings.PAGE_SIZE_ALL,
         liveUpdates = this[KEY_LIVE_UPDATES] ?: true,
     )
@@ -177,6 +187,9 @@ class SettingsRepository(private val context: Context) {
     private companion object {
         val json = Json { ignoreUnknownKeys = true }
 
+        /** The counts the settings screen offers, as a range to clamp to. */
+        val GRID_COLUMN_RANGE = AppSettings.GRID_COLUMNS.min()..AppSettings.GRID_COLUMNS.max()
+
         const val PRIMARY = "primary"
         const val SECONDARY = "secondary"
         const val SUFFIX_ENABLED = "_enabled"
@@ -194,6 +207,7 @@ class SettingsRepository(private val context: Context) {
         val KEY_FILTERS = stringPreferencesKey("library_filters")
         val KEY_RANGES = stringPreferencesKey("library_ranges")
         val KEY_POSTER_WIDTH = intPreferencesKey("poster_width")
+        val KEY_GRID_COLUMNS = intPreferencesKey("grid_columns")
         val KEY_PAGE_SIZE = intPreferencesKey("page_size")
         val KEY_LIVE_UPDATES = booleanPreferencesKey("live_updates")
     }

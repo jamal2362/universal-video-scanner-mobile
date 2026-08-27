@@ -436,7 +436,10 @@ private fun LibraryGrid(
 
     LazyVerticalGrid(
         state = gridState,
-        columns = GridCells.Adaptive(minSize = 116.dp),
+        // A count rather than a minimum width: how many covers stand beside
+        // each other is the thing the settings let a reader decide, and an
+        // adaptive grid would quietly overrule it on a wider screen.
+        columns = GridCells.Fixed(state.gridColumns),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
