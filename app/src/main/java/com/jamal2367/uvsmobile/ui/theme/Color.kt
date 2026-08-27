@@ -88,3 +88,16 @@ val BadgeDolbyVision = Color(0xFF1B1035) to Color(0xFFD9C7FF)
 val BadgeHdr10Plus = Color(0xFF3A0808) to Color(0xFFFFB3AC)
 val BadgeHdr10 = Color(0xFF07203D) to Color(0xFFA8CDFF)
 val BadgeSdr = Color(0xFF1E2226) to Color(0xFFC5CBD2)
+
+/**
+ * The accents a track uses.
+ *
+ * Read by what the track can do rather than by whose name is on it: magenta
+ * where the sound is placed in a room - Atmos, DTS:X - cyan where it is
+ * lossless, and the same quiet grey as SDR for a track that is neither. Hues
+ * the grades do not use, so the two lines under a title never have to be told
+ * apart by reading them.
+ */
+val BadgeAudioObject = Color(0xFF2E0A22) to Color(0xFFFFB0DE)
+val BadgeAudioLossless = Color(0xFF04262B) to Color(0xFF8FE7F5)
+val BadgeAudioLossy = Color(0xFF1E2226) to Color(0xFFC5CBD2)

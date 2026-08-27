@@ -10,23 +10,38 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    name: Build, test and lint
+    name: Build, test and release
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      # The build runs on 21 because that is what AGP 9 and Gradle 9 are built
+      # against; 17 is below what the toolchain resolves and the run dies
+      # during configuration rather than in a task anyone can read.
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      # Named in full, because the runner image does not carry a platform this
+      # new and the package is not called what `compileSdk = 37` reads like:
+      # SDK 37 ships as `platforms;android-37.0`, and left to find it itself
+      # the build asks for `platforms;android-37`, which does not exist.
+      - name: Install the Android SDK the build compiles against
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-37.0 build-tools;37.0.0"
 
       - name: Unit tests
         run: ./gradlew testDebugUnitTest --stacktrace
@@ -37,12 +52,73 @@ jobs:
       - name: Assemble the debug APK
         run: ./gradlew assembleDebug --stacktrace
 
+      # A name that says which build it is once it has been downloaded, since
+      # every one of them is otherwise `app-debug.apk` in the same folder.
+      - name: Name the APK after the build it came from
+        id: apk
+        run: |
+          set -euo pipefail
+          version=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts | head -1)
+          name="uvs-mobile-${version}-debug-build${{ github.run_number }}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Upload the debug APK
         uses: actions/upload-artifact@v4
         with:
           name: uvs-mobile-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ steps.apk.outputs.name }}
           if-no-files-found: error
+
+      # Every commit gets one, so there is always an install to hand for the
+      # state of a branch - no run to find, no artifact zip to unpack. The tag
+      # is the run number rather than the version, because the version stands
+      # still across dozens of commits and a tag cannot.
+      #
+      # Only the default branch is marked latest: a release cut from a working
+      # branch is a build to try, not the one to point anyone at.
+      - name: Publish the build as a release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: build-${{ github.run_number }}
+          APK: ${{ steps.apk.outputs.name }}
+          VERSION: ${{ steps.apk.outputs.version }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # A re-run of the same build carries the same number, and a tag that
+          # is already there would fail the step rather than replace it.
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+
+          commit="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
+          {
+            echo "Debug build of \`$BRANCH\` at [\`${GITHUB_SHA:0:7}\`]($commit)."
+            echo
+            git log -1 --pretty=%B
+            echo
+            echo '---'
+            echo
+            echo 'Signed with the standard debug keystore and installed as'
+            echo '`com.jamal2367.uvsmobile.debug`, so it sits alongside a'
+            echo 'release install rather than replacing it.'
+          } > release-notes.md
+
+          latest=false
+          prerelease=true
+          if [ "$BRANCH" = "${{ github.event.repository.default_branch }}" ]; then
+            latest=true
+            prerelease=false
+          fi
+
+          gh release create "$TAG" "$APK" \
+            --title "UVS $VERSION - build ${{ github.run_number }}" \
+            --notes-file release-notes.md \
+            --target "$GITHUB_SHA" \
+            --latest="$latest" \
+            --prerelease="$prerelease"
 
       - name: Upload the reports of a failed run
         if: failure()

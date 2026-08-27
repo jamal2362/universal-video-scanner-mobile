@@ -15,6 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jamal2367.uvsmobile.data.model.LibraryEntry
+import com.jamal2367.uvsmobile.ui.theme.BadgeAudioLossless
+import com.jamal2367.uvsmobile.ui.theme.BadgeAudioLossy
+import com.jamal2367.uvsmobile.ui.theme.BadgeAudioObject
 import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVision
 import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVisionFel
 import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVisionMel
@@ -130,6 +133,45 @@ private fun hdrColors(entry: LibraryEntry): Pair<Color, Color> {
         format.contains("hdr10+") || detail.contains("hdr10+") -> BadgeHdr10Plus
         format.contains("hdr") || format.contains("hlg") -> BadgeHdr10
         else -> BadgeSdr
+    }
+}
+
+/**
+ * The track a title carries, in one chip.
+ *
+ * Coloured like the grade above it, and for the same reason: "Dolby TrueHD
+ * 7.1 (Atmos)" and "Dolby Digital 5.1" begin with the same word and are not
+ * the same evening, and a colour says which before the line has been read.
+ */
+@Composable
+fun AudioBadge(entry: LibraryEntry, modifier: Modifier = Modifier) {
+    val codec = entry.audioCodec?.trim()?.takeIf { it.isNotEmpty() } ?: return
+    val (container, content) = audioColors(codec)
+    MetaChip(text = codec, container = container, content = content, modifier = modifier)
+}
+
+/**
+ * The ground and face a track is drawn in.
+ *
+ * By what the track can do, not by whose name is on it: a mix placed in a room
+ * first, then whether it survives the disc intact, then everything else. The
+ * order matters - a Dolby TrueHD track with Atmos in it is both, and the room
+ * is the thing worth seeing first.
+ */
+fun audioColors(codec: String): Pair<Color, Color> {
+    val name = codec.lowercase()
+    return when {
+        name.contains("atmos") || name.contains("dts:x") || name.contains("dts-x") ->
+            BadgeAudioObject
+
+        name.contains("truehd") ||
+            name.contains("dts-hd ma") ||
+            name.contains("dts-hd master") ||
+            name.contains("flac") ||
+            name.contains("pcm") ||
+            name.contains("alac") -> BadgeAudioLossless
+
+        else -> BadgeAudioLossy
     }
 }
 

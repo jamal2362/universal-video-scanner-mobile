@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jamal2367.uvsmobile.data.model.LibraryEntry
+import com.jamal2367.uvsmobile.ui.components.AudioBadge
 import com.jamal2367.uvsmobile.ui.components.HdrBadge
 import com.jamal2367.uvsmobile.ui.components.MetaChip
 import com.jamal2367.uvsmobile.ui.components.PosterImage
@@ -151,9 +152,7 @@ fun EntryListRow(
 
                 HdrBadge(entry)
 
-                entry.audioCodec?.takeIf { it.isNotBlank() }?.let {
-                    MetaChip(text = it, outlined = true)
-                }
+                AudioBadge(entry)
             }
         }
     }

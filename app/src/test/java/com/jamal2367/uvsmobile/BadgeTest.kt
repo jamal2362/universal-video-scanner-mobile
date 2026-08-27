@@ -1,7 +1,11 @@
 package com.jamal2367.uvsmobile
 
 import com.jamal2367.uvsmobile.data.model.LibraryEntry
+import com.jamal2367.uvsmobile.ui.components.audioColors
 import com.jamal2367.uvsmobile.ui.components.hdrLabel
+import com.jamal2367.uvsmobile.ui.theme.BadgeAudioLossless
+import com.jamal2367.uvsmobile.ui.theme.BadgeAudioLossy
+import com.jamal2367.uvsmobile.ui.theme.BadgeAudioObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -83,5 +87,37 @@ class HdrBadgeTest {
         assertNull(hdrLabel(LibraryEntry()))
         assertNull(hdrLabel(LibraryEntry(hdrFormat = "")))
         assertNull(hdrLabel(LibraryEntry(hdrFormat = "Unknown")))
+    }
+}
+
+/**
+ * What colour a track is drawn in.
+ *
+ * By what it can do rather than whose name is on it: two tracks that both
+ * begin "Dolby" are not the same evening.
+ */
+class AudioBadgeTest {
+
+    @Test
+    fun `a mix placed in a room is read first`() {
+        assertEquals(BadgeAudioObject, audioColors("Dolby TrueHD 7.1 (Atmos)"))
+        assertEquals(BadgeAudioObject, audioColors("Dolby Digital Plus 5.1 (Atmos)"))
+        assertEquals(BadgeAudioObject, audioColors("DTS:X 7.1"))
+    }
+
+    @Test
+    fun `a track that survives the disc intact is its own colour`() {
+        assertEquals(BadgeAudioLossless, audioColors("Dolby TrueHD 7.1"))
+        assertEquals(BadgeAudioLossless, audioColors("DTS-HD MA 5.1"))
+        assertEquals(BadgeAudioLossless, audioColors("FLAC 2.0"))
+        assertEquals(BadgeAudioLossless, audioColors("LPCM 2.0"))
+    }
+
+    @Test
+    fun `everything else stays out of the way`() {
+        assertEquals(BadgeAudioLossy, audioColors("Dolby Digital 5.1"))
+        assertEquals(BadgeAudioLossy, audioColors("DTS 5.1"))
+        assertEquals(BadgeAudioLossy, audioColors("AAC 2.0"))
+        assertEquals(BadgeAudioLossy, audioColors(""))
     }
 }
