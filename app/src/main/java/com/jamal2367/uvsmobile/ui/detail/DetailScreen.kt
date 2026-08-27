@@ -309,7 +309,13 @@ private fun DetailContent(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // A name is read as one thing, so the gap between two of
+                    // them has to be wider than the gap inside either - and a
+                    // wrapped line of them needs the same room downwards.
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         entry.tmdbCast.forEach { MetaChip(text = it, outlined = true) }
                     }
                 }

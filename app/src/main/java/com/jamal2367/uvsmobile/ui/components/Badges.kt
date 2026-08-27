@@ -3,13 +3,13 @@ package com.jamal2367.uvsmobile.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -175,7 +175,14 @@ fun audioColors(codec: String): Pair<Color, Color> {
     }
 }
 
-/** The chips under a poster: grade, frame, codec, track - as many as fit. */
+/**
+ * The chips under a poster: grade, frame, codec, track.
+ *
+ * A flow rather than a row, because a track spells itself out - "Dolby TrueHD
+ * 7.1 (Atmos)" is wider than the three chips before it put together - and the
+ * last chip on a line is not the one worth dropping off the edge of a phone.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EntryChipRow(
     entry: LibraryEntry,
@@ -183,10 +190,10 @@ fun EntryChipRow(
     showCodecs: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    Row(
+    FlowRow(
         modifier = modifier.padding(contentPadding),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         HdrBadge(entry)
         entry.resolutionClass?.takeIf { it.isNotBlank() && it != "Unknown" }?.let {
@@ -197,5 +204,6 @@ fun EntryChipRow(
                 MetaChip(text = it, outlined = true)
             }
         }
+        AudioBadge(entry)
     }
 }
