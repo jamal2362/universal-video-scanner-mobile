@@ -1,8 +1,45 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+}
+
+// Where the release signing material comes from: the environment first, so CI
+// can hand it over as secrets without writing anything into the repository,
+// then a gitignored `keystore.properties` at the root for local release
+// builds. Read through `providers` and a tracked file read, both of which the
+// configuration cache understands -- `System.getenv` would invalidate it.
+data class ReleaseSigning(
+    val storeFile: File,
+    val storePassword: String,
+    val keyAlias: String,
+    val keyPassword: String,
+)
+
+val releaseSigning: ReleaseSigning? = run {
+    val properties = Properties().apply {
+        val file = rootProject.file("keystore.properties")
+        if (file.isFile) file.inputStream().use { load(it) }
+    }
+
+    fun value(environment: String, property: String): String? =
+        providers.environmentVariable(environment).orNull?.takeIf { it.isNotBlank() }
+            ?: properties.getProperty(property)?.takeIf { it.isNotBlank() }
+
+    // Resolved against the repository root, not `app/`, so a relative
+    // `storeFile` reads the way the `keystore.properties` beside it looks.
+    val store = value("KEYSTORE_FILE", "storeFile")?.let(rootProject::file) ?: return@run null
+    if (!store.isFile) return@run null
+
+    ReleaseSigning(
+        storeFile = store,
+        storePassword = value("KEYSTORE_PASSWORD", "storePassword") ?: return@run null,
+        keyAlias = value("KEY_ALIAS", "keyAlias") ?: return@run null,
+        keyPassword = value("KEY_PASSWORD", "keyPassword") ?: return@run null,
+    )
 }
 
 android {
@@ -17,8 +54,29 @@ android {
         versionName = "1.1.0"
     }
 
+    val signing = releaseSigning
+
+    signingConfigs {
+        if (signing != null) {
+            create("release") {
+                storeFile = signing.storeFile
+                storePassword = signing.storePassword
+                keyAlias = signing.keyAlias
+                keyPassword = signing.keyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // Falls back to the debug key when no release material is
+            // configured, so `assembleRelease` still yields an installable APK
+            // on a checkout that has no keystore -- an unsigned APK is one
+            // nobody can do anything with.
+            signingConfig = signingConfigs.getByName(
+                if (signing != null) "release" else "debug"
+            )
+
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
