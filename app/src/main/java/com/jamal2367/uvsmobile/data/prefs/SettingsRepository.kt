@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.jamal2367.uvsmobile.data.model.SortOption
+import com.jamal2367.uvsmobile.data.model.SortOrder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -44,6 +46,16 @@ class SettingsRepository(private val context: Context) {
         it[KEY_LAYOUT] = layout.name
     }
 
+    /** Keep an order, and the direction picking it settled on. */
+    suspend fun setLibrarySort(sort: SortOption, order: SortOrder) = edit {
+        it[KEY_SORT] = sort.name
+        it[KEY_SORT_ORDER] = order.name
+    }
+
+    suspend fun setLibrarySortOrder(order: SortOrder) = edit {
+        it[KEY_SORT_ORDER] = order.name
+    }
+
     suspend fun setPosterWidth(width: Int) = edit {
         it[KEY_POSTER_WIDTH] = width
     }
@@ -77,6 +89,9 @@ class SettingsRepository(private val context: Context) {
         themeMode = this[KEY_THEME].toEnum(ThemeMode.SYSTEM),
         dynamicColor = this[KEY_DYNAMIC_COLOR] ?: true,
         libraryLayout = this[KEY_LAYOUT].toEnum(LibraryLayout.GRID),
+        librarySort = this[KEY_SORT].toEnum(SortOption.FILENAME),
+        librarySortOrder = this[KEY_SORT_ORDER]
+            .toEnum(this[KEY_SORT].toEnum(SortOption.FILENAME).defaultOrder),
         posterWidth = this[KEY_POSTER_WIDTH] ?: 320,
         pageSize = this[KEY_PAGE_SIZE] ?: AppSettings.PAGE_SIZE_ALL,
         liveUpdates = this[KEY_LIVE_UPDATES] ?: true,
@@ -106,6 +121,8 @@ class SettingsRepository(private val context: Context) {
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val KEY_LAYOUT = stringPreferencesKey("library_layout")
+        val KEY_SORT = stringPreferencesKey("library_sort")
+        val KEY_SORT_ORDER = stringPreferencesKey("library_sort_order")
         val KEY_POSTER_WIDTH = intPreferencesKey("poster_width")
         val KEY_PAGE_SIZE = intPreferencesKey("page_size")
         val KEY_LIVE_UPDATES = booleanPreferencesKey("live_updates")

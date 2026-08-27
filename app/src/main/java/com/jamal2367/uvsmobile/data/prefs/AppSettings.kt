@@ -1,5 +1,8 @@
 package com.jamal2367.uvsmobile.data.prefs
 
+import com.jamal2367.uvsmobile.data.model.SortOption
+import com.jamal2367.uvsmobile.data.model.SortOrder
+
 /**
  * One Universal Video Scanner instance the app may talk to.
  *
@@ -56,6 +59,15 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
     val libraryLayout: LibraryLayout = LibraryLayout.GRID,
+    /**
+     * The order the library was last put in.
+     *
+     * Remembered like the layout is: someone who sorts by year is not asking
+     * for one screen, and having to pick it again after every launch is a tap
+     * for an answer they already gave.
+     */
+    val librarySort: SortOption = SortOption.FILENAME,
+    val librarySortOrder: SortOrder = SortOption.FILENAME.defaultOrder,
     val posterWidth: Int = 320,
     val pageSize: Int = PAGE_SIZE_ALL,
     val liveUpdates: Boolean = true,

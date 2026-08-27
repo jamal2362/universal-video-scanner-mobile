@@ -89,6 +89,11 @@ fun EntryGridCard(
 /**
  * One title in the list: the same cover, smaller, with room for the technical
  * detail a grid has no space for.
+ *
+ * Four lines, in the order they are read: the title, the file in one line -
+ * year, frame, running time, size - then how it is graded, then its track. Each
+ * badge on its own line, so the column fills the height the cover sets rather
+ * than leaving a band of empty card under it.
  */
 @Composable
 fun EntryListRow(
@@ -104,7 +109,10 @@ fun EntryListRow(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
     ) {
-        Row(modifier = Modifier.padding(10.dp)) {
+        Row(
+            modifier = Modifier.padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             PosterImage(
                 entry = entry,
                 width = posterWidth,
@@ -141,17 +149,10 @@ fun EntryListRow(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    HdrBadge(entry)
-                    entry.videoCodec?.takeIf { it.isNotBlank() }?.let {
-                        MetaChip(text = it, outlined = true)
-                    }
-                    entry.audioCodec?.takeIf { it.isNotBlank() }?.let {
-                        MetaChip(text = it, outlined = true)
-                    }
+                HdrBadge(entry)
+
+                entry.audioCodec?.takeIf { it.isNotBlank() }?.let {
+                    MetaChip(text = it, outlined = true)
                 }
             }
         }

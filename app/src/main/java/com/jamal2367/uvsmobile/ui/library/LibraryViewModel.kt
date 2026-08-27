@@ -141,6 +141,15 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private var pageSizeKnown = false
 
     /**
+     * Whether the stored order has been put back yet.
+     *
+     * Only the first settings to arrive carry it: after that the order on
+     * screen is the newer of the two, and a later emission - the write that
+     * stored the order, among others - would put the old one back.
+     */
+    private var sortRestored = false
+
+    /**
      * The newest change stamp this screen has seen.
      *
      * What `updated_since` is asked with: a scan of a thousand files publishes a
@@ -188,6 +197,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             .debounce { (index, _) -> if (index == 0) 0L else SERVER_CHANGE_DEBOUNCE_MS }
             .onEach { (_, updated) ->
                 settings = updated
+                restoreSort(updated)
                 refresh()
                 loadFilterOptions()
             }
@@ -230,11 +240,34 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
      * wanted. The two buttons above the list still turn it back.
      */
     fun setSort(sort: SortOption) {
+        viewModelScope.launch {
+            container.settingsRepository.setLibrarySort(sort, sort.defaultOrder)
+        }
         updateQuery { it.copy(sort = sort, order = sort.defaultOrder) }
     }
 
     fun setOrder(order: SortOrder) {
+        viewModelScope.launch { container.settingsRepository.setLibrarySortOrder(order) }
         updateQuery { it.copy(order = order) }
+    }
+
+    /**
+     * Put the library back in the order it was last left in.
+     *
+     * Done here rather than where the layout is read, because this is the one
+     * place the first page is asked for: the order is in the query before the
+     * request goes out, so a launch costs one call rather than a filename sort
+     * fetched and thrown away.
+     */
+    private fun restoreSort(stored: AppSettings) {
+        if (sortRestored) return
+        sortRestored = true
+
+        val query = _state.value.query
+        if (query.sort == stored.librarySort && query.order == stored.librarySortOrder) return
+        _state.value = _state.value.copy(
+            query = query.copy(sort = stored.librarySort, order = stored.librarySortOrder),
+        )
     }
 
     fun setFilter(field: FilterField, value: String?) {
