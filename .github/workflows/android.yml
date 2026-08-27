@@ -111,14 +111,18 @@ jobs:
           if-no-files-found: warn
 
       # Every commit gets one, so there is always an install to hand for the
-      # state of a branch - no run to find, no artifact zip to unpack. The tag
-      # is the run number rather than the version, because the version stands
-      # still across dozens of commits and a tag cannot.
+      # state of a branch - no run to find, no artifact zip to unpack. A run
+      # started by hand publishes too, so re-cutting a build for a branch that
+      # has had no new commits is one button rather than an empty commit. Only
+      # pull requests are left out: the head of the branch is released anyway,
+      # and a release per PR push would be the same build twice. The tag is the
+      # run number rather than the version, because the version stands still
+      # across dozens of commits and a tag cannot.
       #
       # Only the default branch is marked latest: a release cut from a working
       # branch is a build to try, not the one to point anyone at.
       - name: Publish the build as a release
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: build-${{ github.run_number }}
