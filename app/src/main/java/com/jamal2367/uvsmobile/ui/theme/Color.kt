@@ -72,10 +72,19 @@ val DarkOutlineVariant = Color(0xFF41484D)
 /**
  * The accents the badges use.
  *
- * Ordered the way the scanner ranks a grade, so the richest formats are the
- * ones that stand out most on a poster.
+ * A colour per grade, so a scroll through the library can be read without
+ * reading a word of it: green for a full enhancement layer, amber for a
+ * minimal one, violet for the Dolby Vision profiles that carry neither, blue
+ * for HDR10, red for HDR10+, and a grey that stays out of the way for SDR.
+ *
+ * Each is a deep ground under a light face rather than a pair drawn from the
+ * theme, because a badge sits on a poster: whatever the wallpaper or the time
+ * of day has done to the rest of the screen, it has to hold up over a bright
+ * frame and a dark one alike.
  */
+val BadgeDolbyVisionFel = Color(0xFF07271A) to Color(0xFF8FEEBC)
+val BadgeDolbyVisionMel = Color(0xFF2E1B00) to Color(0xFFFFC98A)
 val BadgeDolbyVision = Color(0xFF1B1035) to Color(0xFFD9C7FF)
-val BadgeHdr10Plus = Color(0xFF2B1B00) to Color(0xFFFFD8A8)
-val BadgeHdr10 = Color(0xFF00201A) to Color(0xFF9FF2DE)
+val BadgeHdr10Plus = Color(0xFF3A0808) to Color(0xFFFFB3AC)
+val BadgeHdr10 = Color(0xFF07203D) to Color(0xFFA8CDFF)
 val BadgeSdr = Color(0xFF1E2226) to Color(0xFFC5CBD2)

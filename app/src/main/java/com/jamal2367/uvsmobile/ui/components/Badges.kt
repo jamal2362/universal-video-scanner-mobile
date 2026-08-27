@@ -16,6 +16,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jamal2367.uvsmobile.data.model.LibraryEntry
 import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVision
+import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVisionFel
+import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVisionMel
 import com.jamal2367.uvsmobile.ui.theme.BadgeHdr10
 import com.jamal2367.uvsmobile.ui.theme.BadgeHdr10Plus
 import com.jamal2367.uvsmobile.ui.theme.BadgeSdr
@@ -107,11 +109,24 @@ private fun dolbyVisionProfile(detail: String): String? {
 
 private val PROFILE_PATTERN = Regex("""Profile\s+(\d+(?:\.\d+)?)""", RegexOption.IGNORE_CASE)
 
+/**
+ * The ground and face a grade is drawn in.
+ *
+ * Dolby Vision splits by enhancement layer rather than sharing one violet,
+ * because that is the distinction anyone scrolling is actually looking for -
+ * a FEL and a MEL are told apart at a glance, and the profiles that carry
+ * neither keep the violet.
+ */
 private fun hdrColors(entry: LibraryEntry): Pair<Color, Color> {
     val format = entry.hdrFormat?.lowercase().orEmpty()
     val detail = entry.hdrDetail?.lowercase().orEmpty()
+    val layer = entry.elType?.trim().orEmpty()
     return when {
-        format.contains("dolby vision") -> BadgeDolbyVision
+        format.contains("dolby vision") -> when {
+            layer.equals("FEL", ignoreCase = true) -> BadgeDolbyVisionFel
+            layer.equals("MEL", ignoreCase = true) -> BadgeDolbyVisionMel
+            else -> BadgeDolbyVision
+        }
         format.contains("hdr10+") || detail.contains("hdr10+") -> BadgeHdr10Plus
         format.contains("hdr") || format.contains("hlg") -> BadgeHdr10
         else -> BadgeSdr
