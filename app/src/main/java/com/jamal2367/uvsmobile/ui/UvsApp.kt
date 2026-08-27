@@ -1,7 +1,6 @@
 package com.jamal2367.uvsmobile.ui
 
 import android.content.Intent
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
@@ -31,6 +30,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,6 +54,7 @@ import com.jamal2367.uvsmobile.di.AppContainer
 import com.jamal2367.uvsmobile.ui.navigation.TopLevelDestination
 import com.jamal2367.uvsmobile.ui.navigation.UvsNavHost
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -96,7 +97,7 @@ fun UvsApp(container: AppContainer, settings: AppSettings) {
     val atRoot = backStackEntry != null && navController.previousBackStackEntry == null
 
     UpdateCheck(container, snackbarHostState)
-    DoubleBackToExit(enabled = atRoot)
+    DoubleBackToExit(enabled = atRoot, snackbarHostState = snackbarHostState)
 
     CompositionLocalProvider(LocalPosterServer provides posterServer) {
         if (useRail) {
@@ -199,30 +200,38 @@ private fun UpdateCheck(container: AppContainer, snackbarHostState: SnackbarHost
  * that the count starts again.
  */
 @Composable
-private fun DoubleBackToExit(enabled: Boolean) {
-    val context = LocalContext.current
+private fun DoubleBackToExit(enabled: Boolean, snackbarHostState: SnackbarHostState) {
     val activity = LocalActivity.current
     val message = stringResource(R.string.exit_confirm)
+    val scope = rememberCoroutineScope()
 
     // Deliberately not saved across a rotation: an app turned over between the
     // two presses is not being left, and half a gesture from before should not
     // be waiting to close it.
     var armed by remember { mutableStateOf(false) }
 
-    LaunchedEffect(armed) {
-        if (!armed) return@LaunchedEffect
-        delay(EXIT_CONFIRM_WINDOW_MS.milliseconds)
-        armed = false
-    }
-
     // Back somewhere else on the stack is a screen to return to, and the
     // navigation's own handler - added later, so asked first - takes it.
     BackHandler(enabled = enabled) {
         if (armed) {
             activity?.finish()
-        } else {
-            armed = true
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            return@BackHandler
+        }
+
+        armed = true
+        scope.launch {
+            // Whatever is on screen goes first. The host shows one snackbar at
+            // a time and queues the rest, so an update notice still sitting
+            // there would hold this one back until it timed out - and the
+            // window would be open, with nothing on screen saying so.
+            snackbarHostState.currentSnackbarData?.dismiss()
+            try {
+                snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+            } finally {
+                // The window is exactly as long as the message is up, however
+                // it ended - timed out, swiped away, or the composition gone.
+                armed = false
+            }
         }
     }
 }
@@ -303,12 +312,3 @@ private fun NavHostController.switchTo(destination: TopLevelDestination) {
 
 /** How long the library gets to itself before the update check speaks up. */
 private const val UPDATE_CHECK_DELAY_MS = 5_000L
-
-/**
- * How long the second press of back has to arrive in.
- *
- * The same couple of seconds the toast that asks for it is on screen: the
- * window closing while the message still stands would be a promise the app
- * does not keep.
- */
-private const val EXIT_CONFIRM_WINDOW_MS = 2_000L

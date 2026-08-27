@@ -161,9 +161,9 @@ the rest.
 
 **Leaving the app** takes two presses of back. The library is one tab of five
 and back out of it is back out of everything, which is a long way to fall for a
-thumb that meant to close a sheet — so the first press says so and the second,
-within a couple of seconds, closes the app. Back anywhere else on the stack
-still just goes back.
+thumb that meant to close a sheet — so the first press says so in a snackbar,
+and a second one while that is still on screen closes the app. Back anywhere
+else on the stack still just goes back.
 
 **The update check** asks GitHub for the newest release a few seconds after
 launch — long enough that the first page of the library has the screen to
