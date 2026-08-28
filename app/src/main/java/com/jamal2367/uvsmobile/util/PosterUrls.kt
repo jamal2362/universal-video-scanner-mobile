@@ -29,11 +29,13 @@ object PosterUrls {
     /**
      * The URL for one of an entry's two images, or null when it has none.
      *
-     * A request for the cover falls back to the backdrop: an instance that
-     * predates `portrait_url`, or a title neither source had cover art for,
-     * should still show something rather than a grid of blanks. The other
-     * direction has no fallback - a cover letterboxed into a 16:9 header looks
-     * worse than no header at all.
+     * Neither image ever stands in for the other. The scanner already looks the
+     * cover up at both artwork sources - the configured one first, the other as
+     * its fallback - so an entry without a `portrait_url` is a title neither
+     * source has cover art for, and the placeholder is the honest answer:
+     * a backdrop cropped to 2:3 loses most of the frame and usually the title
+     * with it, just as a cover letterboxed into a 16:9 header looks worse than
+     * no header at all.
      */
     fun forEntry(
         entry: LibraryEntry,
@@ -41,9 +43,7 @@ object PosterUrls {
         width: Int?,
         artwork: Artwork = Artwork.PORTRAIT,
     ): String? = when (artwork) {
-        Artwork.PORTRAIT ->
-            imageUrl(entry.portraitUrl, server, width) ?: imageUrl(entry.posterUrl, server, width)
-
+        Artwork.PORTRAIT -> imageUrl(entry.portraitUrl, server, width)
         Artwork.LANDSCAPE -> imageUrl(entry.posterUrl, server, width)
     }
 

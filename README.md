@@ -141,9 +141,11 @@ cover, and that is what every tile and every poster slot in this app asks for �
 it is laid out for that shape, and a backdrop cropped to it loses most of the
 frame. `poster_url` is the 16:9 backdrop, which is what the web interface is
 built around; here it is the header image at the top of a title's screen, faded
-into the page with the cover on top of it. A title with no cover falls back to
-its backdrop rather than showing a blank, and an instance too old to know
-`portrait_url` behaves exactly that way throughout.
+into the page with the cover on top of it. Neither stands in for the other: the
+scanner looks the cover up at both artwork sources — the one its `IMAGE_SOURCE`
+prefers first, the other as the fallback — so a tile with no cover is a title
+neither Fanart.tv nor TMDB has cover art for, and the placeholder is what it
+gets.
 
 **Posters per row** is 2, 3 or 4, and 3 unless you say otherwise. It is a
 count rather than a width, because that is what anyone looking at the grid is
@@ -342,9 +344,12 @@ settings says which address was tried.
 not a Universal Video Scanner. Check the port.
 
 **Covers stay blank** — the scanner caches a poster only when it could fetch
-one; without a `TMDB_API_KEY` or `FANART_API_KEY` there is nothing to show. An
-entry whose image could not be cached carries the remote URL and is loaded from
-that host instead, which needs the phone to have internet access.
+one; without a `TMDB_API_KEY` or `FANART_API_KEY` there is nothing to show.
+Configuring **both** keys is what gives the scanner its fallback, so a title the
+preferred source has no cover art for still gets one from the other; a title
+neither has shows the placeholder. An entry whose image could not be cached
+carries the remote URL and is loaded from that host instead, which needs the
+phone to have internet access.
 
 **No live updates** — the stream needs the same token and address as everything
 else; the dot in the scan screen's title bar says whether it is connected. It

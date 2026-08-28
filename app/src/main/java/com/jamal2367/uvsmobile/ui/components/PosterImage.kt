@@ -26,10 +26,13 @@ import com.jamal2367.uvsmobile.util.PosterUrls
  * A title's artwork.
  *
  * Asks for the upright cover by default, which is what every tile and every
- * poster slot in this app is laid out for; an entry that has none falls back to
- * the 16:9 backdrop rather than showing a blank. The server keeps four widths
- * of each cached image and makes the one asked for on first use, so a grid of
- * covers costs a kilobyte or two apiece instead of the full-size image.
+ * poster slot in this app is laid out for. The scanner has already looked that
+ * cover up at both artwork sources - the configured one first, the other as its
+ * fallback - so an entry without one is a title neither has cover art for, and
+ * the placeholder below is shown rather than a backdrop cropped to 2:3. The
+ * server keeps four widths of each cached image and makes the one asked for on
+ * first use, so a grid of covers costs a kilobyte or two apiece instead of the
+ * full-size image.
  */
 @Composable
 fun PosterImage(
