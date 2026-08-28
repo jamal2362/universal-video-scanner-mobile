@@ -113,4 +113,25 @@ class LibraryQueryTest {
         assertTrue(query.hasAnyNarrowing)
         assertFalse(LibraryQuery().hasAnyNarrowing)
     }
+
+    @Test
+    fun `only the page a launch opens on is worth keeping for the next one`() {
+        // The order and the narrowing are stored and put back, so a page read
+        // through them is exactly what the next launch will ask for again.
+        assertTrue(LibraryQuery().isWhatALaunchOpensOn)
+        assertTrue(
+            LibraryQuery(
+                sort = SortOption.YEAR,
+                order = SortOrder.DESC,
+                filters = mapOf(FilterField.HDR_FORMAT to "Dolby Vision"),
+                ranges = mapOf(RangeField.TMDB_YEAR to RangeValue(min = 2020.0)),
+            ).isWhatALaunchOpensOn
+        )
+
+        // A search is asked about one moment and never restored; the other two
+        // are not the library screen asking at all.
+        assertFalse(LibraryQuery(search = "dune").isWhatALaunchOpensOn)
+        assertFalse(LibraryQuery(updatedSince = 1_750_000_000.0).isWhatALaunchOpensOn)
+        assertFalse(LibraryQuery(fields = LibraryQuery.VALUE_FIELDS).isWhatALaunchOpensOn)
+    }
 }

@@ -169,6 +169,18 @@ data class LibraryQuery(
     val hasAnyNarrowing: Boolean
         get() = activeFilterCount > 0 || search.isNotBlank()
 
+    /**
+     * Whether this is a question the library screen opens on by itself.
+     *
+     * The order and the narrowing are stored and put back, so those still
+     * count; a search term is not - it is asked about one moment and never
+     * restored - and neither is a projection for the filter sheet or a
+     * `updated_since` catch-up. Only this shape is worth keeping on disk for
+     * the next launch to fill its screen with.
+     */
+    val isWhatALaunchOpensOn: Boolean
+        get() = search.isBlank() && updatedSince == null && fields == LIST_FIELDS
+
     /** The query string, exactly as `/api/v1/library` documents it. */
     fun toParams(limit: Int?, offset: Int): Map<String, String> = buildMap {
         put("sort", sort.queryValue)

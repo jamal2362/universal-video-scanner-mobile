@@ -266,6 +266,14 @@ fun LibraryScreen(
     }
 
     if (showFilter) {
+        // The values the sheet offers as chips are fetched here rather than at
+        // startup: this is the moment they are wanted, and at startup they are
+        // two requests - one of them across the whole library - that the first
+        // page would have to share the connection with. Here rather than in the
+        // button, so a sheet that was open before the app was killed fills in
+        // too.
+        LaunchedEffect(Unit) { viewModel.ensureFilterOptions() }
+
         FilterSheet(
             query = state.query,
             options = state.filterOptions,

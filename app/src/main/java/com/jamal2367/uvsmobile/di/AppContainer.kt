@@ -8,6 +8,7 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import com.jamal2367.uvsmobile.BuildConfig
 import com.jamal2367.uvsmobile.data.prefs.SettingsRepository
+import com.jamal2367.uvsmobile.data.prefs.StoredReachability
 import com.jamal2367.uvsmobile.data.remote.ConnectionTester
 import com.jamal2367.uvsmobile.data.remote.FailoverInterceptor
 import com.jamal2367.uvsmobile.data.remote.ServerRouter
@@ -15,6 +16,7 @@ import com.jamal2367.uvsmobile.data.remote.LiveEvent
 import com.jamal2367.uvsmobile.data.remote.SseClient
 import com.jamal2367.uvsmobile.data.remote.UpdateChecker
 import com.jamal2367.uvsmobile.data.remote.UvsApi
+import com.jamal2367.uvsmobile.data.repository.LibraryPageStore
 import com.jamal2367.uvsmobile.data.repository.ScannerRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,12 +57,18 @@ class AppContainer(private val context: Context) {
 
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context) }
 
-    val router: ServerRouter by lazy { ServerRouter() }
+    /**
+     * Built with the note of what last answered, so a start away from home
+     * goes to the address that works rather than waiting out the one that does
+     * not.
+     */
+    val router: ServerRouter by lazy { ServerRouter(StoredReachability(context)) }
 
     /**
      * Short connect timeout on purpose: in automatic mode a local address that
      * is not on this network has to fail quickly, because the fallback to the
-     * remote one waits behind it.
+     * remote one waits behind it. An address that still has another one behind
+     * it is cut shorter again, in the failover interceptor.
      */
     private val baseClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -120,7 +128,17 @@ class AppContainer(private val context: Context) {
             .create(UvsApi::class.java)
     }
 
-    val repository: ScannerRepository by lazy { ScannerRepository(api, json) }
+    /**
+     * The library page a start paints the screen with before anything has been
+     * asked of a server.
+     */
+    private val libraryPageStore: LibraryPageStore by lazy {
+        LibraryPageStore(context.filesDir.resolve("library_page.json"), json)
+    }
+
+    val repository: ScannerRepository by lazy {
+        ScannerRepository(api, json, libraryPageStore)
+    }
 
     val sseClient: SseClient by lazy { SseClient(streamClient, router, json) }
 
