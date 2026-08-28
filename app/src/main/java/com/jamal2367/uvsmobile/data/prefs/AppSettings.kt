@@ -89,7 +89,9 @@ data class AppSettings(
      * A count rather than a width, because that is the thing anyone looking at
      * the screen is actually deciding: three is what fits a phone comfortably,
      * two makes the covers large enough to read a title off, four fits more of
-     * the library on screen at once.
+     * the library on screen at once. One is the exception - a single upright
+     * cover across the whole screen would be taller than the screen, so that
+     * column shows the 16:9 backdrop instead.
      */
     val gridColumns: Int = DEFAULT_GRID_COLUMNS,
     val pageSize: Int = PAGE_SIZE_ALL,
@@ -128,7 +130,10 @@ data class AppSettings(
         /** What the grid holds until someone says otherwise. */
         const val DEFAULT_GRID_COLUMNS = 3
 
-        val GRID_COLUMNS = listOf(2, 3, 4)
+        val GRID_COLUMNS = listOf(1, 2, 3, 4)
+
+        /** The one column that is laid out for the backdrop, not the cover. */
+        const val SINGLE_GRID_COLUMN = 1
 
         /** The page size that means "do not page at all". */
         const val PAGE_SIZE_ALL = 0

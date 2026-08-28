@@ -235,7 +235,7 @@
     <string name="settings_poster_width">Posterbreite</string>
     <string name="settings_poster_width_desc">Welche verkleinerte Kopie beim Server angefragt wird</string>
     <string name="settings_grid_columns">Poster pro Reihe</string>
-    <string name="settings_grid_columns_desc">Wie viele Cover im Raster nebeneinander stehen</string>
+    <string name="settings_grid_columns_desc">Wie viele Cover im Raster nebeneinander stehen. Bei 1 wird das Querformat-Poster statt des hochkanten Covers gezeigt.</string>
     <string name="settings_page_size">Einträge pro Seite</string>
     <string name="settings_page_size_desc">Wie viele Einträge auf eine Seite der Bibliothek passen. Bei „Alle“ steht die ganze Bibliothek auf einer Seite, es gibt dann nichts zu blättern.</string>
     <string name="settings_page_size_all">Alle</string>
