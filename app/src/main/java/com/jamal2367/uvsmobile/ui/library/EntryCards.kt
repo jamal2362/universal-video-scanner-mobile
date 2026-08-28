@@ -22,29 +22,43 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jamal2367.uvsmobile.data.model.LibraryEntry
+import com.jamal2367.uvsmobile.data.prefs.AppSettings
 import com.jamal2367.uvsmobile.ui.components.AudioBadge
 import com.jamal2367.uvsmobile.ui.components.HdrBadge
 import com.jamal2367.uvsmobile.ui.components.MetaChip
 import com.jamal2367.uvsmobile.ui.components.PosterImage
+import com.jamal2367.uvsmobile.util.Artwork
 import com.jamal2367.uvsmobile.util.Formatters
 
-/** One title in the grid: the cover, what it is called, and how it is graded. */
+/**
+ * One title in the grid: the cover, what it is called, and how it is graded.
+ *
+ * [landscape] swaps the upright cover for the 16:9 backdrop, which is what the
+ * one-per-row grid asks for: an upright cover the full width of a phone stands
+ * taller than the screen, so a row would hold nothing else, while the backdrop
+ * at that width is the header image it was made to be.
+ */
 @Composable
 fun EntryGridCard(
     entry: LibraryEntry,
     posterWidth: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    landscape: Boolean = false,
 ) {
     Column(modifier = modifier.clickable(onClick = onClick)) {
         Box {
             PosterImage(
                 entry = entry,
-                width = posterWidth,
+                // A tile that fills the row is twice the width of one in a row
+                // of two, so it is asked for the next copy up rather than the
+                // one the settings picked for a grid of covers.
+                width = if (landscape) wideTileWidth(posterWidth) else posterWidth,
+                artwork = if (landscape) Artwork.LANDSCAPE else Artwork.PORTRAIT,
                 contentDescription = entry.displayTitle,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(2f / 3f)
+                    .aspectRatio(if (landscape) 16f / 9f else 2f / 3f)
                     .clip(RoundedCornerShape(18.dp)),
             )
             entry.top250Rank?.let { rank ->
@@ -65,9 +79,16 @@ fun EntryGridCard(
             )
         }
 
+        // A tile the full width of the screen carries its title at the size a
+        // line that wide is read at; the small label is for a cover in a row of
+        // three or four.
         Text(
             text = entry.displayTitle,
-            style = MaterialTheme.typography.labelLarge,
+            style = if (landscape) {
+                MaterialTheme.typography.titleMedium
+            } else {
+                MaterialTheme.typography.labelLarge
+            },
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 8.dp),
@@ -79,13 +100,24 @@ fun EntryGridCard(
                 entry.resolutionClass?.takeIf { it.isNotBlank() && it != "Unknown" },
                 Formatters.ratingOutOfTen(entry.imdbRating ?: entry.tmdbRating),
             ).joinToString(" · "),
-            style = MaterialTheme.typography.labelSmall,
+            style = if (landscape) {
+                MaterialTheme.typography.bodyMedium
+            } else {
+                MaterialTheme.typography.labelSmall
+            },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
     }
 }
+
+/**
+ * The copy to ask for when one tile fills the row: one step up from the chosen
+ * width, or that width itself when the server keeps nothing larger.
+ */
+private fun wideTileWidth(posterWidth: Int): Int =
+    AppSettings.POSTER_WIDTHS.firstOrNull { it > posterWidth } ?: posterWidth
 
 /**
  * One title in the list: the same cover, smaller, with room for the technical

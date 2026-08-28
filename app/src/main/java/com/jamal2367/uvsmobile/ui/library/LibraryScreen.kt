@@ -60,6 +60,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jamal2367.uvsmobile.R
+import com.jamal2367.uvsmobile.data.prefs.AppSettings
 import com.jamal2367.uvsmobile.data.prefs.LibraryLayout
 import com.jamal2367.uvsmobile.ui.components.EmptyState
 import com.jamal2367.uvsmobile.ui.components.ErrorState
@@ -451,6 +452,10 @@ private fun LibraryGrid(
                 entry = entry,
                 posterWidth = state.posterWidth,
                 onClick = { onOpenEntry(entry.path) },
+                // One per row is the wide layout: at that width the upright
+                // cover would be taller than the screen, so the tile shows the
+                // 16:9 backdrop instead.
+                landscape = state.gridColumns == AppSettings.SINGLE_GRID_COLUMN,
             )
         }
     }

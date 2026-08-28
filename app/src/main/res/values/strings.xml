@@ -235,7 +235,7 @@
     <string name="settings_poster_width">Poster width</string>
     <string name="settings_poster_width_desc">Which resized copy the server is asked for</string>
     <string name="settings_grid_columns">Posters per row</string>
-    <string name="settings_grid_columns_desc">How many covers stand side by side in the grid</string>
+    <string name="settings_grid_columns_desc">How many covers stand side by side in the grid. At 1 the wide backdrop is shown instead of the upright cover.</string>
     <string name="settings_page_size">Entries per page</string>
     <string name="settings_page_size_desc">How many entries one page of the library holds. At “All” the whole library is on one page and there is nothing to page through.</string>
     <string name="settings_page_size_all">All</string>
