@@ -16,6 +16,8 @@ import com.jamal2367.uvsmobile.data.remote.NoServerConfiguredException
 import com.jamal2367.uvsmobile.data.remote.ServerUnreachableException
 import com.jamal2367.uvsmobile.data.remote.UvsApi
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
@@ -29,15 +31,23 @@ import java.util.concurrent.ConcurrentHashMap
  * One layer above Retrofit, for two reasons: every failure comes back as an
  * [ApiFailure] a screen can put words to, and the library's ETag is kept here
  * so a repeated question costs a `304` and no body at all.
+ *
+ * The first page of that outlives the process, in [store]: a cold start would
+ * otherwise have nothing to put on screen until the whole library had arrived.
  */
 class ScannerRepository(
     private val api: UvsApi,
     private val json: Json,
+    private val store: LibraryPageStore? = null,
 ) {
 
     private data class CachedPage(val etag: String, val page: LibraryPage)
 
     private val pageCache = ConcurrentHashMap<String, CachedPage>()
+
+    /** Whether the page kept from the last launch has been looked for yet. */
+    @Volatile
+    private var storeRead = false
 
     /**
      * One window onto the library.
@@ -48,22 +58,87 @@ class ScannerRepository(
      * library of thousands.
      */
     suspend fun library(query: LibraryQuery, limit: Int?, offset: Int): LibraryPage {
-        val params = query.toParams(limit, offset)
-        val signature = params.entries.sortedBy { it.key }.joinToString("&") { "${it.key}=${it.value}" }
-        val cached = pageCache[signature]
+        val signature = signatureOf(query, limit, offset)
+        val cached = remembered(signature)
 
         return call {
-            val response = api.library(params, cached?.etag)
+            val response = api.library(query.toParams(limit, offset), cached?.etag)
             when {
                 response.code() == 304 && cached != null -> cached.page
                 response.isSuccessful -> {
                     val page = response.body() ?: throw ApiFailure.Malformed(null)
-                    response.headers()["ETag"]?.let { pageCache[signature] = CachedPage(it, page) }
+                    response.headers()["ETag"]?.let { etag ->
+                        pageCache[signature] = CachedPage(etag, page)
+                        keep(signature, etag, page, query, offset)
+                    }
                     page
                 }
 
                 else -> throw response.toFailure()
             }
+        }
+    }
+
+    /**
+     * The answer to this exact question as it was last seen, without asking.
+     *
+     * What the library screen paints itself with while the real request is on
+     * its way. Null means there is nothing remembered for it - a first launch,
+     * a different order, a search nobody has run before.
+     */
+    suspend fun cachedLibrary(query: LibraryQuery, limit: Int?, offset: Int): LibraryPage? =
+        remembered(signatureOf(query, limit, offset))?.page
+
+    /** What identifies one question, independent of which address answers it. */
+    private fun signatureOf(query: LibraryQuery, limit: Int?, offset: Int): String =
+        query.toParams(limit, offset).entries
+            .sortedBy { it.key }
+            .joinToString("&") { "${it.key}=${it.value}" }
+
+    /**
+     * The remembered answer to one question - from this session, or from the
+     * page the last one left behind.
+     */
+    private suspend fun remembered(signature: String): CachedPage? {
+        pageCache[signature]?.let { return it }
+        val store = store ?: return null
+        if (storeRead) return null
+
+        // Only ever read once: after that the map is the whole truth, and a
+        // question with nothing remembered for it must not go back to the disk
+        // on every keystroke of a search.
+        storeRead = true
+        val stored = withContext(Dispatchers.IO) { store.read() } ?: return null
+        val restored = CachedPage(stored.etag, stored.page)
+        pageCache.putIfAbsent(stored.signature, restored)
+        return restored.takeIf { stored.signature == signature }
+    }
+
+    /**
+     * Keep this page for the next launch, if it is the one a launch will want.
+     *
+     * There is room for exactly one, so it has to be the page the library
+     * screen opens on: the first, in the order and narrowing that were stored,
+     * with the fields a row is drawn from. A search nobody will type again, a
+     * projection the filter sheet asked for, or the fifth page of anything
+     * would take that place and answer nothing on the next start.
+     *
+     * Reached only when the server actually sent a body - a library that has
+     * not changed comes back `304` and never gets this far - so this is a
+     * write per change, not a write per refresh.
+     */
+    private suspend fun keep(
+        signature: String,
+        etag: String,
+        page: LibraryPage,
+        query: LibraryQuery,
+        offset: Int,
+    ) {
+        val store = store ?: return
+        if (!query.isWhatALaunchOpensOn || offset != 0) return
+        storeRead = true
+        withContext(Dispatchers.IO) {
+            store.write(StoredLibraryPage(signature, etag, page))
         }
     }
 
@@ -137,7 +212,12 @@ class ScannerRepository(
     suspend fun clearDatabase(): Int = mutating { api.clearDatabase().total }
 
     /** Forget every remembered page - used when the server or its token changes. */
-    fun invalidateCache() = pageCache.clear()
+    fun invalidateCache() {
+        pageCache.clear()
+        // Nothing is left to read back, so there is nothing to go looking for.
+        storeRead = true
+        store?.clear()
+    }
 
     /** A call that changes the library, after which no cached page can be trusted. */
     private suspend fun <T> mutating(block: suspend () -> T): T = call(block).also { invalidateCache() }

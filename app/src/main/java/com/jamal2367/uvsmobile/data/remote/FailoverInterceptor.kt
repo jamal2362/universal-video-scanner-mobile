@@ -5,6 +5,7 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 /**
  * Sends every request to whichever configured instance answers.
@@ -18,6 +19,12 @@ import java.io.IOException
  * answer - a 401 from the local server means the token is wrong, and asking the
  * remote one with the same wrong token would only turn a clear error into a
  * confusing one.
+ *
+ * Every address but the last gets a short leash. An instance on the same
+ * network answers a connection in a few milliseconds; one that is not on this
+ * network answers nothing at all, and the full connect timeout spent finding
+ * that out is time the screen stays empty for. The last address keeps the whole
+ * timeout, because behind it there is nothing left to fall back to.
  */
 class FailoverInterceptor(private val router: ServerRouter) : Interceptor {
 
@@ -27,8 +34,13 @@ class FailoverInterceptor(private val router: ServerRouter) : Interceptor {
 
         var lastFailure: IOException? = null
         for ((index, server) in servers.withIndex()) {
+            val attempt = if (index == servers.lastIndex) {
+                chain
+            } else {
+                chain.withConnectTimeout(FIRST_ATTEMPT_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            }
             try {
-                val response = chain.proceed(chain.request().retargetTo(server))
+                val response = attempt.proceed(chain.request().retargetTo(server))
                 router.markReachable(server)
                 return response
             } catch (failure: IOException) {
@@ -64,6 +76,15 @@ class FailoverInterceptor(private val router: ServerRouter) : Interceptor {
 
     companion object {
         const val TOKEN_HEADER = "X-API-Token"
+
+        /**
+         * How long an address with another one behind it gets to connect.
+         *
+         * Generous for a server in the same flat and far short of the full
+         * timeout, which is what a phone that has left it would otherwise wait
+         * before the address that works is even tried.
+         */
+        const val FIRST_ATTEMPT_CONNECT_TIMEOUT_MS = 2_000
     }
 }
 

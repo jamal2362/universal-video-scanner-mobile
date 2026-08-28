@@ -131,6 +131,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     private var loadJob: Job? = null
     private var filterOptionsJob: Job? = null
+
+    /** Whether the filter sheet's choices have been asked for, for this server. */
+    private var filterOptionsRequested = false
+
     private var settings: AppSettings = AppSettings()
 
     /**
@@ -201,8 +205,14 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             .onEach { (_, updated) ->
                 settings = updated
                 restoreQuery(updated)
+                // The sheet's choices are two more requests, one of them a
+                // projection of the whole library - and nobody has opened the
+                // sheet yet. They are fetched when it is, so the first screen
+                // has the connection to itself.
+                filterOptionsJob?.cancel()
+                filterOptionsRequested = false
+                _state.value = _state.value.copy(filterOptions = FilterOptions())
                 refresh()
-                loadFilterOptions()
             }
             .launchIn(viewModelScope)
 
@@ -340,6 +350,15 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 error = null,
             )
         }
+
+        // Nothing on screen yet, and the answer to this exact question is
+        // already known from the last launch: put it up rather than a spinner.
+        // The request below replaces it a moment later - usually with a `304`
+        // and the very same rows, because its ETag went out with it.
+        if (_state.value.entries.isEmpty()) {
+            showRememberedPage(query, size, page)
+        }
+
         try {
             var result = repository.library(query, size, offset = page * (size ?: 0))
             val lastPage = lastPageFor(result.total, size)
@@ -367,6 +386,39 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 notConfigured = failure is ApiFailure.NotConfigured,
             )
         }
+    }
+
+    /**
+     * Fill the screen with the page kept from the last launch, if it answers
+     * the question being asked now.
+     *
+     * Marked as refreshing rather than loaded: these rows are as old as the
+     * last time the app was open, and the request that confirms them is still
+     * on its way.
+     */
+    private suspend fun showRememberedPage(query: LibraryQuery, size: Int?, page: Int) {
+        val remembered = try {
+            repository.cachedLibrary(query, size, offset = page * (size ?: 0))
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Throwable) {
+            null
+        } ?: return
+
+        // Something came back while the page was being read off the disk; that
+        // is the newer answer and this one has nothing to add.
+        if (_state.value.entries.isNotEmpty()) return
+
+        rememberSyncStamp(remembered.files)
+        _state.value = _state.value.copy(
+            entries = remembered.files,
+            total = remembered.total,
+            pageSize = size,
+            page = page,
+            isLoading = false,
+            isRefreshing = true,
+            notConfigured = false,
+        )
     }
 
     /** The last page that holds anything, given how many matches there are. */
@@ -457,7 +509,18 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
      * It matters that these are real values: the API matches a filter exactly,
      * so a typed "Profile 8" finds nothing at all when the stored detail reads
      * "Dolby Vision Profile 8.1" - a filter that looks broken rather than empty.
+     *
+     * Asked for when the sheet is opened rather than at startup: it is the one
+     * screen that needs them, and two extra requests - one of them across the
+     * whole library - alongside the first page is the first page arriving later
+     * for a sheet nobody has asked to see.
      */
+    fun ensureFilterOptions() {
+        if (filterOptionsRequested) return
+        filterOptionsRequested = true
+        loadFilterOptions()
+    }
+
     private fun loadFilterOptions() {
         // The counts are a second request behind every server change, and a
         // stale one is worth no more than a stale page is.
@@ -468,6 +531,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
             } catch (_: Throwable) {
+                // Nothing was read, so the next time the sheet is opened is
+                // worth another try - a server that was asleep may be up.
+                filterOptionsRequested = false
                 return@launch
             }
 
