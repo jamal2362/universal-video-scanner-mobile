@@ -17,6 +17,10 @@ import org.junit.Test
  * server can serve or the remote URL it was never cached from. Confusing any of
  * those four cases means a grid of holes, a cropped backdrop where a cover
  * belongs, or a request to a host that knows nothing about it.
+ *
+ * Which of the two artwork sources an image came from is the scanner's business
+ * and never shows up here: both are cached under a name this app just passes
+ * back, so a Fanart.tv cover and a TMDB one travel exactly the same way.
  */
 class PosterUrlsTest {
 
@@ -85,11 +89,15 @@ class PosterUrlsTest {
     }
 
     @Test
-    fun `a title with no cover falls back to its backdrop`() {
+    fun `a cover is never stood in for by a backdrop`() {
         val withoutCover = entry.copy(portraitUrl = null)
 
+        // The scanner asks both artwork sources for the cover, so an entry
+        // without one is a title neither has - and a backdrop cropped to 2:3
+        // loses most of the frame. The placeholder is the honest answer.
+        assertNull(PosterUrls.forEntry(withoutCover, server, width = 320))
         assertTrue(
-            PosterUrls.forEntry(withoutCover, server, width = 320)!!
+            PosterUrls.forEntry(withoutCover, server, width = 640, artwork = Artwork.LANDSCAPE)!!
                 .contains("tmdb_438631.jpg")
         )
     }
@@ -103,6 +111,16 @@ class PosterUrlsTest {
         assertTrue(
             PosterUrls.forEntry(coverOnly, server, width = 320)!!
                 .contains("tmdb_portrait_438631.jpg")
+        )
+    }
+
+    @Test
+    fun `a cover cached from Fanart tv is served like any other`() {
+        val fromFanart = entry.copy(portraitUrl = "/poster/fanart_portrait_438631.jpg")
+
+        assertTrue(
+            PosterUrls.forEntry(fromFanart, server, width = 320)!!
+                .contains("fanart_portrait_438631.jpg")
         )
     }
 
