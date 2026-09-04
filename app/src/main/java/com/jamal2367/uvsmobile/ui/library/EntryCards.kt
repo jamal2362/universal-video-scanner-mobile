@@ -27,6 +27,7 @@ import com.jamal2367.uvsmobile.ui.components.AudioBadge
 import com.jamal2367.uvsmobile.ui.components.HdrBadge
 import com.jamal2367.uvsmobile.ui.components.MetaChip
 import com.jamal2367.uvsmobile.ui.components.PosterImage
+import com.jamal2367.uvsmobile.ui.components.RatingBadge
 import com.jamal2367.uvsmobile.util.Artwork
 import com.jamal2367.uvsmobile.util.Formatters
 
@@ -61,9 +62,17 @@ fun EntryGridCard(
                     .aspectRatio(if (landscape) 16f / 9f else 2f / 3f)
                     .clip(RoundedCornerShape(18.dp)),
             )
-            // Both badges at the larger size: on the cover they are read from
-            // across a grid of posters rather than off the line they sit in,
-            // and the two corners of a poster have the room for it.
+            // Three corners, three things worth knowing before the title is
+            // read: how it is rated, whether it is in the chart, how it is
+            // graded. All at the larger size - on a cover they are read from
+            // across a grid of posters rather than off a line of text.
+            RatingBadge(
+                entry = entry,
+                large = true,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(6.dp),
+            )
             entry.top250Rank?.let { rank ->
                 MetaChip(
                     text = "#$rank",
@@ -71,7 +80,7 @@ fun EntryGridCard(
                     content = MaterialTheme.colorScheme.onPrimaryContainer,
                     large = true,
                     modifier = Modifier
-                        .align(Alignment.TopStart)
+                        .align(Alignment.TopEnd)
                         .padding(6.dp),
                 )
             }
@@ -104,16 +113,15 @@ fun EntryGridCard(
             modifier = Modifier.padding(top = 8.dp),
         )
 
-        // Four values do not fit on one line of a narrow tile, so it wraps onto
-        // a second rather than ending in an ellipsis: the running time is the
-        // last of them, and a line that cuts off is a line that only ever shows
-        // the year. The running time is shortened for the same reason - "min"
-        // spelled out is a third of a line spent on a word.
+        // The rating is not repeated here: it is in the corner of the cover
+        // above, and a narrow tile has about a dozen characters to a line to
+        // spend. The running time is shortened for the same reason - "min"
+        // spelled out is a third of a line spent on a word - and the line is
+        // allowed a second one rather than ending in an ellipsis.
         Text(
             text = listOfNotNull(
                 entry.tmdbYear?.takeIf { it.isNotBlank() },
                 entry.resolutionClass?.takeIf { it.isNotBlank() && it != "Unknown" },
-                Formatters.ratingStarred(entry.imdbRating ?: entry.tmdbRating),
                 if (landscape) {
                     Formatters.duration(entry.duration)
                 } else {

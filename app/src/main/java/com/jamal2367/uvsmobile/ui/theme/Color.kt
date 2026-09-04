@@ -101,3 +101,13 @@ val BadgeSdr = Color(0xFF1E2226) to Color(0xFFC5CBD2)
 val BadgeAudioObject = Color(0xFF2E0A22) to Color(0xFFFFB0DE)
 val BadgeAudioLossless = Color(0xFF04262B) to Color(0xFF8FE7F5)
 val BadgeAudioLossy = Color(0xFF1E2226) to Color(0xFFC5CBD2)
+
+/**
+ * The corner of a poster a rating sits in.
+ *
+ * The gold of the star it is written with, on the same kind of deep ground the
+ * grades use: it lies on artwork, so it has to hold up over a bright frame and
+ * a dark one alike. A hue none of the grades or tracks has taken, because the
+ * three badges on a cover are told apart by colour before any of them is read.
+ */
+val BadgeRating = Color(0xFF2B2006) to Color(0xFFFFD98F)

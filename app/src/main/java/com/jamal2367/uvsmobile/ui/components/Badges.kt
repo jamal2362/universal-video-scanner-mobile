@@ -23,8 +23,10 @@ import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVisionFel
 import com.jamal2367.uvsmobile.ui.theme.BadgeDolbyVisionMel
 import com.jamal2367.uvsmobile.ui.theme.BadgeHdr10
 import com.jamal2367.uvsmobile.ui.theme.BadgeHdr10Plus
+import com.jamal2367.uvsmobile.ui.theme.BadgeRating
 import com.jamal2367.uvsmobile.ui.theme.BadgeSdr
 import com.jamal2367.uvsmobile.ui.theme.PillShape
+import com.jamal2367.uvsmobile.util.Formatters
 import com.jamal2367.uvsmobile.util.HdrGroups
 
 /**
@@ -142,6 +144,26 @@ private fun hdrColors(entry: LibraryEntry): Pair<Color, Color> {
         format.contains("hdr") || format.contains("hlg") -> BadgeHdr10
         else -> BadgeSdr
     }
+}
+
+/**
+ * How a title is rated, in one chip.
+ *
+ * IMDb where there is one, TMDB where there is not - the same order the line
+ * under a cover reads them in, and the star says which of the numbers on a
+ * poster this is.
+ */
+@Composable
+fun RatingBadge(entry: LibraryEntry, modifier: Modifier = Modifier, large: Boolean = false) {
+    val label = Formatters.ratingStarred(entry.imdbRating ?: entry.tmdbRating) ?: return
+    val (container, content) = BadgeRating
+    MetaChip(
+        text = label,
+        container = container,
+        content = content,
+        large = large,
+        modifier = modifier,
+    )
 }
 
 /**
