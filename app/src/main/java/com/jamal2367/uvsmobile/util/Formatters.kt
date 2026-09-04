@@ -41,6 +41,24 @@ object Formatters {
         }
     }
 
+    /**
+     * `2 h 17` - the same running time, for a tile that has no room for it.
+     *
+     * Four covers across a phone leave each one about a dozen characters a
+     * line, and "min" spelled out is a third of them spent on a word the colon
+     * of a running time already implies.
+     */
+    fun durationCompact(seconds: Double?): String? {
+        val total = seconds?.takeIf { it > 0 }?.roundToInt() ?: return null
+        val hours = total / 3600
+        val minutes = (total % 3600) / 60
+        return when {
+            hours > 0 -> "$hours h $minutes"
+            minutes > 0 -> "$minutes min"
+            else -> "$total s"
+        }
+    }
+
     /** The scanner stores bitrates in kb/s; anything past a megabit reads better as one. */
     fun bitrate(kilobitsPerSecond: Double?): String? {
         val value = kilobitsPerSecond?.takeIf { it > 0 } ?: return null

@@ -82,6 +82,11 @@ fun EntryGridCard(
         // A tile the full width of the screen carries its title at the size a
         // line that wide is read at; the small label is for a cover in a row of
         // three or four.
+        //
+        // A narrow tile is given a third line for it: at four covers across a
+        // phone a title has about a dozen characters to a line, and two lines
+        // cut "Deja Vu - Wettlauf gegen die Zeit" in half. The wide tile keeps
+        // two, which at that width is a title nobody has.
         Text(
             text = entry.displayTitle,
             style = if (landscape) {
@@ -89,17 +94,26 @@ fun EntryGridCard(
             } else {
                 MaterialTheme.typography.labelLarge
             },
-            maxLines = 2,
+            maxLines = if (landscape) 2 else 3,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 8.dp),
         )
 
+        // Four values do not fit on one line of a narrow tile, so it wraps onto
+        // a second rather than ending in an ellipsis: the running time is the
+        // last of them, and a line that cuts off is a line that only ever shows
+        // the year. The running time is shortened for the same reason - "min"
+        // spelled out is a third of a line spent on a word.
         Text(
             text = listOfNotNull(
                 entry.tmdbYear?.takeIf { it.isNotBlank() },
                 entry.resolutionClass?.takeIf { it.isNotBlank() && it != "Unknown" },
                 Formatters.ratingStarred(entry.imdbRating ?: entry.tmdbRating),
-                Formatters.duration(entry.duration),
+                if (landscape) {
+                    Formatters.duration(entry.duration)
+                } else {
+                    Formatters.durationCompact(entry.duration)
+                },
             ).joinToString(" · "),
             style = if (landscape) {
                 MaterialTheme.typography.bodyMedium
@@ -107,7 +121,7 @@ fun EntryGridCard(
                 MaterialTheme.typography.labelSmall
             },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
+            maxLines = if (landscape) 1 else 2,
             overflow = TextOverflow.Ellipsis,
         )
     }
