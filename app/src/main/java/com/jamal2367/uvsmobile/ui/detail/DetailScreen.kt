@@ -30,7 +30,6 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -128,9 +128,14 @@ fun DetailScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    // One line, but all of it: without the ellipsis the line
+                    // breaks at the last whole word that fits and the rest is
+                    // dropped, which leaves a gap and no sign that a title went
+                    // missing. "Grand Theft Auto VI: Ein aus…" says both.
                     Text(
                         text = state.entry?.displayTitle.orEmpty(),
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 },
                 navigationIcon = {
@@ -147,6 +152,18 @@ fun DetailScreen(
                             modifier = Modifier
                                 .padding(end = 16.dp)
                                 .size(28.dp),
+                        )
+                    }
+                    // The one thing on this screen that cannot be undone, in
+                    // the corner every screen keeps its actions in - and out of
+                    // the way of the button that is pressed often.
+                    IconButton(
+                        onClick = { confirmDelete = true },
+                        enabled = state.entry != null && !state.isWorking,
+                    ) {
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = stringResource(R.string.action_delete),
                         )
                     }
                 },
@@ -168,7 +185,6 @@ fun DetailScreen(
                 posterWidth = state.posterWidth,
                 isWorking = state.isWorking,
                 onRescan = { viewModel.rescan(rescanDone) },
-                onDelete = { confirmDelete = true },
                 onCopyPath = {
                     context.copyToClipboard(it)
                     // Android 13 and newer show their own confirmation, so this
@@ -213,7 +229,6 @@ private fun DetailContent(
     posterWidth: Int,
     isWorking: Boolean,
     onRescan: () -> Unit,
-    onDelete: () -> Unit,
     onCopyPath: (String) -> Unit,
     contentPadding: PaddingValues,
 ) {
@@ -231,27 +246,21 @@ private fun DetailContent(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Button(
-                onClick = onRescan,
-                enabled = !isWorking,
-                modifier = Modifier.weight(1f),
-            ) {
-                Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(
-                    text = stringResource(
-                        if (isWorking) R.string.detail_rescan_running else R.string.detail_rescan
-                    ),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
-            OutlinedButton(onClick = onDelete, enabled = !isWorking) {
-                Icon(
-                    Icons.Outlined.Delete,
-                    contentDescription = stringResource(R.string.action_delete),
-                    modifier = Modifier.size(18.dp),
-                )
-            }
+        // Outlined rather than filled: reading a title is what this screen is
+        // for, and a solid accent button at the top of it draws the eye to a
+        // job that is done once in a while.
+        OutlinedButton(
+            onClick = onRescan,
+            enabled = !isWorking,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(
+                text = stringResource(
+                    if (isWorking) R.string.detail_rescan_running else R.string.detail_rescan
+                ),
+                modifier = Modifier.padding(start = 8.dp),
+            )
         }
 
         entry.tmdbPlot?.takeIf { it.isNotBlank() }?.let { plot ->
