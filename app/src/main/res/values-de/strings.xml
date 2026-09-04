@@ -125,14 +125,10 @@
     <string name="detail_not_found">Die Bibliothek kennt keinen Eintrag zu diesem Pfad.</string>
 
     <!-- HDR-Metadaten -->
-    <string name="hdr_hdr10_mdl_max">Mastering Display, max</string>
-    <string name="hdr_hdr10_mdl_min">Mastering Display, min</string>
-    <string name="hdr_hdr10_max_cll">MaxCLL</string>
-    <string name="hdr_hdr10_max_fall">MaxFALL</string>
-    <string name="hdr_rpu_mdl_max">RPU Mastering Display, max</string>
-    <string name="hdr_rpu_mdl_min">RPU Mastering Display, min</string>
-    <string name="hdr_rpu_max_cll">RPU MaxCLL (L6)</string>
-    <string name="hdr_rpu_max_fall">RPU MaxFALL (L6)</string>
+    <string name="hdr_hdr10_mdl">HDR10 MDL</string>
+    <string name="hdr_hdr10_max_cll_fall">HDR10 MaxCLL/FALL</string>
+    <string name="hdr_rpu_mdl">RPU MDL</string>
+    <string name="hdr_rpu_max_cll_fall">RPU MaxCLL/FALL</string>
     <string name="hdr_l5_crop">L5 Active Area</string>
 
     <!-- Wertungen -->

@@ -524,33 +524,47 @@ private fun RatingChip(label: String, value: String?) {
  * The static HDR metadata, split the way the stream carries it: the base
  * layer's own mastering display and light levels, the Dolby Vision grade's, and
  * the active area its L5 describes.
+ *
+ * Named and paired as the web interface names and pairs them - HDR10 MDL, HDR10
+ * MaxCLL/FALL, and the RPU's two - so that a title read on a phone and the same
+ * title read in a browser say the same words in the same order.
  */
 @Composable
 private fun HdrMetadataCard(metadata: HdrMetadata?) {
     if (metadata == null || metadata.isEmpty) return
 
     SectionCard(title = stringResource(R.string.detail_hdr_metadata)) {
-        InfoRow(
-            stringResource(R.string.hdr_hdr10_mdl_max),
-            Formatters.luminance(metadata.hdr10MdlMax),
-        )
-        InfoRow(
-            stringResource(R.string.hdr_hdr10_mdl_min),
-            Formatters.luminance(metadata.hdr10MdlMin),
-        )
-        InfoRow(stringResource(R.string.hdr_hdr10_max_cll), Formatters.nits(metadata.hdr10MaxCll))
-        InfoRow(stringResource(R.string.hdr_hdr10_max_fall), Formatters.nits(metadata.hdr10MaxFall))
-        InfoRow(stringResource(R.string.hdr_rpu_mdl_max), Formatters.luminance(metadata.rpuMdlMax))
-        InfoRow(stringResource(R.string.hdr_rpu_mdl_min), Formatters.luminance(metadata.rpuMdlMin))
-        InfoRow(stringResource(R.string.hdr_rpu_max_cll), Formatters.nits(metadata.rpuMaxCll))
-        InfoRow(stringResource(R.string.hdr_rpu_max_fall), Formatters.nits(metadata.rpuMaxFall))
-        if (metadata.hasActiveArea) {
+        // Both rows of a layer or neither: a grade that carries a mastering
+        // display but no content light levels is a real answer, and leaving
+        // that row out would read as a missing row rather than a missing
+        // measurement. A layer the stream has none of at all stays out.
+        if (metadata.hasBaseLayer) {
             InfoRow(
-                stringResource(R.string.hdr_l5_crop),
-                "L ${metadata.l5Left.toInt()} · R ${metadata.l5Right.toInt()} · " +
-                    "T ${metadata.l5Top.toInt()} · B ${metadata.l5Bottom.toInt()}",
+                stringResource(R.string.hdr_hdr10_mdl),
+                Formatters.luminancePair(metadata.hdr10MdlMax, metadata.hdr10MdlMin),
+            )
+            InfoRow(
+                stringResource(R.string.hdr_hdr10_max_cll_fall),
+                Formatters.nitsPair(metadata.hdr10MaxCll, metadata.hdr10MaxFall),
             )
         }
+        if (metadata.hasRpu) {
+            InfoRow(
+                stringResource(R.string.hdr_rpu_mdl),
+                Formatters.luminancePair(metadata.rpuMdlMax, metadata.rpuMdlMin),
+            )
+            InfoRow(
+                stringResource(R.string.hdr_rpu_max_cll_fall),
+                Formatters.nitsPair(metadata.rpuMaxCll, metadata.rpuMaxFall),
+            )
+        }
+        // Always, even at four zeros: "no crop" is what an L5 that reads
+        // nothing means, and that is an answer rather than a missing row.
+        InfoRow(
+            stringResource(R.string.hdr_l5_crop),
+            "L: ${metadata.l5Left.toInt()} | R: ${metadata.l5Right.toInt()} | " +
+                "T: ${metadata.l5Top.toInt()} | B: ${metadata.l5Bottom.toInt()}",
+        )
     }
 }
 

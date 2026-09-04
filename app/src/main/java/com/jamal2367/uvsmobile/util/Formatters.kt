@@ -95,17 +95,43 @@ object Formatters {
     /** `4000 cd/m²`, with the fractions a minimum luminance needs. */
     fun luminance(value: Double?): String? {
         val nits = value?.takeIf { it > 0 } ?: return null
+        return "${luminanceNumber(nits)} cd/m²"
+    }
+
+    /**
+     * `4000 | 0,0050 cd/m²` - a mastering display's two ends in one line.
+     *
+     * The pair the web interface prints under "HDR10 MDL", brightest first: the
+     * two are read against each other, and a unit repeated on both halves is
+     * the same three characters twice.
+     *
+     * A half the stream does not carry is printed as the `0` it is stored as,
+     * rather than taking the row away: which of the two is missing is itself
+     * worth seeing, and the screen decides whether the layer is there at all.
+     */
+    fun luminancePair(max: Double?, min: Double?): String =
+        "${luminanceNumber(max ?: 0.0)} | ${luminanceNumber(min ?: 0.0)} cd/m²"
+
+    /** `1200 cd/m²` for the content light levels, which are whole numbers. */
+    fun nits(value: Double?): String? =
+        value?.takeIf { it > 0 }?.let { "${it.roundToInt()} cd/m²" }
+
+    /**
+     * `833 | 108 cd/m²` - MaxCLL and MaxFALL, paired the way the web interface
+     * pairs them, and zero where the stream carries no level.
+     */
+    fun nitsPair(maxCll: Double?, maxFall: Double?): String =
+        "${(maxCll ?: 0.0).roundToInt()} | ${(maxFall ?: 0.0).roundToInt()} cd/m²"
+
+    /** How many decimals a luminance is worth: none at 4000, four at 0,0050. */
+    private fun luminanceNumber(nits: Double): String {
         val decimals = when {
             nits >= 100 -> 0
             nits >= 1 -> 1
             else -> 4
         }
-        return "${format(nits, decimals)} cd/m²"
+        return format(nits, decimals)
     }
-
-    /** `1200 cd/m²` for the content light levels, which are whole numbers. */
-    fun nits(value: Double?): String? =
-        value?.takeIf { it > 0 }?.let { "${it.roundToInt()} cd/m²" }
 
     /** A whole number the API happens to carry as a floating point one. */
     fun whole(value: Double?): String? =
