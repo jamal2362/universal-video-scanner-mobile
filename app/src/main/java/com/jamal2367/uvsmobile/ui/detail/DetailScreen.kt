@@ -331,7 +331,6 @@ private fun DetailContent(
         HdrMetadataCard(entry.hdrMetadata)
 
         SectionCard(title = stringResource(R.string.detail_file)) {
-            InfoRow(stringResource(R.string.field_filename), entry.filename)
             InfoRow(stringResource(R.string.field_duration), Formatters.duration(entry.duration))
             InfoRow(stringResource(R.string.field_file_size), Formatters.fileSize(entry.fileSize))
             InfoRow(
@@ -344,6 +343,9 @@ private fun DetailContent(
             )
             InfoRow(stringResource(R.string.field_tmdb_id), entry.tmdbId)
             InfoRow(stringResource(R.string.field_imdb_id), entry.imdbId)
+            // The path ends in the file name, so the row that carries it is
+            // named for both: a "File name" row above it said the same thing
+            // twice, once cut short.
             InfoRow(
                 label = stringResource(R.string.field_path),
                 value = entry.path,

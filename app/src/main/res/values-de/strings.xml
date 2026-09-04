@@ -84,8 +84,7 @@
     <string name="filter_recent_days">Geändert in den letzten … Tagen</string>
 
     <!-- Felder -->
-    <string name="field_filename">Dateiname</string>
-    <string name="field_path">Pfad</string>
+    <string name="field_path">Pfad/Dateiname</string>
     <string name="field_hdr_format">HDR-Typ</string>
     <string name="field_hdr_detail">HDR-Details</string>
     <string name="field_el_type">Enhancement Layer</string>
