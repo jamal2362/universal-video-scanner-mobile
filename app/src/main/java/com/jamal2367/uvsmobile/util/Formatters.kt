@@ -15,7 +15,13 @@ import kotlin.math.roundToInt
  */
 object Formatters {
 
-    /** `14,2 GB` - decimal units, the way a file manager and a disk both count. */
+    /**
+     * `14,25 GB` - decimal units, the way a file manager and a disk both count.
+     *
+     * Two decimals from kilobytes up: at the size a film is, the first one is
+     * a difference of a hundred megabytes and the second is worth reading too.
+     * Bytes are whole - there is nothing under one.
+     */
     fun fileSize(bytes: Double?): String? {
         val value = bytes?.takeIf { it > 0 } ?: return null
         val units = listOf("B", "kB", "MB", "GB", "TB")
@@ -25,7 +31,7 @@ object Formatters {
             size /= 1000
             unit++
         }
-        val decimals = if (unit == 0 || size >= 100) 0 else 1
+        val decimals = if (unit == 0) 0 else 2
         return "${format(size, decimals)} ${units[unit]}"
     }
 
@@ -39,6 +45,26 @@ object Formatters {
             minutes > 0 -> "$minutes min"
             else -> "$total s"
         }
+    }
+
+    /**
+     * `01:53:09` - the running time to the second, on the clock.
+     *
+     * For the one screen that is about this file rather than about the library:
+     * two encodes of the same film are minutes apart, two rips of the same disc
+     * are seconds apart, and the seconds are how one is told from the other.
+     * Every part padded to two digits and none of them left off, so a column of
+     * running times lines up and is read as the timecode it is.
+     */
+    fun durationExact(seconds: Double?): String? {
+        val total = seconds?.takeIf { it > 0 }?.roundToInt() ?: return null
+        return String.format(
+            Locale.getDefault(),
+            "%02d:%02d:%02d",
+            total / 3600,
+            (total % 3600) / 60,
+            total % 60,
+        )
     }
 
     /**
@@ -59,11 +85,32 @@ object Formatters {
         }
     }
 
-    /** The scanner stores bitrates in kb/s; anything past a megabit reads better as one. */
-    fun bitrate(kilobitsPerSecond: Double?): String? {
+    /**
+     * `49,09 Mb/s` - a picture's bitrate, the way the web interface prints it.
+     *
+     * The scanner stores bitrates in kilobits, and a feature film's picture is
+     * tens of megabits: two decimals is what tells one encode from another at
+     * that size. Anything under a megabit stays in kilobits, where a decimal
+     * would say nothing.
+     */
+    fun videoBitrate(kilobitsPerSecond: Double?): String? {
         val value = kilobitsPerSecond?.takeIf { it > 0 } ?: return null
-        return if (value >= 1000) "${format(value / 1000, 1)} Mb/s" else "${value.roundToInt()} kb/s"
+        return if (value >= 1000) {
+            "${format(value / 1000, 2)} Mb/s"
+        } else {
+            "${value.roundToInt()} Kb/s"
+        }
     }
+
+    /**
+     * `2116 Kb/s` - a track's bitrate, always in kilobits.
+     *
+     * The unit a track is specified and spoken of in: 640, 1509, 4448. Turning
+     * the loud ones into megabits would be the one number on the screen that
+     * has to be converted back before it can be compared with anything.
+     */
+    fun audioBitrate(kilobitsPerSecond: Double?): String? =
+        kilobitsPerSecond?.takeIf { it > 0 }?.let { "${it.roundToInt()} Kb/s" }
 
     /** An epoch stamp in the reader's own date and time format. */
     fun timestamp(context: Context, epochSeconds: Double?): String? {

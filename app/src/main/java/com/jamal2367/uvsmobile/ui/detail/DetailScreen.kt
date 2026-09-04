@@ -316,7 +316,7 @@ private fun DetailContent(
             InfoRow(stringResource(R.string.field_video_encoder), entry.videoEncoder)
             InfoRow(
                 stringResource(R.string.field_video_bitrate),
-                Formatters.bitrate(entry.videoBitrate),
+                Formatters.videoBitrate(entry.videoBitrate),
             )
         }
 
@@ -324,14 +324,17 @@ private fun DetailContent(
             InfoRow(stringResource(R.string.field_audio_codec), entry.audioCodec)
             InfoRow(
                 stringResource(R.string.field_audio_bitrate),
-                Formatters.bitrate(entry.audioBitrate),
+                Formatters.audioBitrate(entry.audioBitrate),
             )
         }
 
         HdrMetadataCard(entry.hdrMetadata)
 
         SectionCard(title = stringResource(R.string.detail_file)) {
-            InfoRow(stringResource(R.string.field_duration), Formatters.duration(entry.duration))
+            InfoRow(
+                stringResource(R.string.field_duration),
+                Formatters.durationExact(entry.duration),
+            )
             InfoRow(stringResource(R.string.field_file_size), Formatters.fileSize(entry.fileSize))
             InfoRow(
                 stringResource(R.string.field_mtime),

@@ -474,14 +474,16 @@ private fun Double?.toDaysAgo(): String {
 private fun RangeUnit.factor(): Double = when (this) {
     RangeUnit.SECONDS -> 60.0            // typed in minutes
     RangeUnit.BYTES -> 1_000_000_000.0   // typed in gigabytes
-    RangeUnit.KILOBITS -> 1_000.0        // typed in megabits per second
+    RangeUnit.MEGABITS -> 1_000.0        // typed in megabits per second
+    RangeUnit.KILOBITS,                  // typed in the kilobits it is stored in
     RangeUnit.YEAR, RangeUnit.RATING_10, RangeUnit.RATING_100, RangeUnit.RANK -> 1.0
 }
 
 private fun RangeUnit.suffix(): String = when (this) {
     RangeUnit.SECONDS -> " (min)"
     RangeUnit.BYTES -> " (GB)"
-    RangeUnit.KILOBITS -> " (Mb/s)"
+    RangeUnit.MEGABITS -> " (Mb/s)"
+    RangeUnit.KILOBITS -> " (Kb/s)"
     RangeUnit.RATING_10 -> " (0–10)"
     RangeUnit.RATING_100 -> " (0–100)"
     RangeUnit.YEAR, RangeUnit.RANK -> ""

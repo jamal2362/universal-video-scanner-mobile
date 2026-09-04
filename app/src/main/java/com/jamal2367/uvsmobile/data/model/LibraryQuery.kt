@@ -17,7 +17,7 @@ enum class FilterField(val key: String, @StringRes val labelRes: Int) {
 }
 
 /** How the two ends of a range should be typed in and printed. */
-enum class RangeUnit { SECONDS, BYTES, KILOBITS, YEAR, RATING_10, RATING_100, RANK }
+enum class RangeUnit { SECONDS, BYTES, MEGABITS, KILOBITS, YEAR, RATING_10, RATING_100, RANK }
 
 /** A field that takes a `min_`/`max_` pair. */
 enum class RangeField(
@@ -27,7 +27,10 @@ enum class RangeField(
 ) {
     DURATION("duration", R.string.field_duration, RangeUnit.SECONDS),
     FILE_SIZE("file_size", R.string.field_file_size, RangeUnit.BYTES),
-    VIDEO_BITRATE("video_bitrate", R.string.field_video_bitrate, RangeUnit.KILOBITS),
+    // Each in the unit it is spoken of in: a picture is tens of megabits, a
+    // track is hundreds or thousands of kilobits and is specified that way.
+    // Both are stored in kilobits either way - only the typing changes.
+    VIDEO_BITRATE("video_bitrate", R.string.field_video_bitrate, RangeUnit.MEGABITS),
     AUDIO_BITRATE("audio_bitrate", R.string.field_audio_bitrate, RangeUnit.KILOBITS),
     TMDB_YEAR("tmdb_year", R.string.field_tmdb_year, RangeUnit.YEAR),
     TMDB_RATING("tmdb_rating", R.string.rating_tmdb, RangeUnit.RATING_10),
