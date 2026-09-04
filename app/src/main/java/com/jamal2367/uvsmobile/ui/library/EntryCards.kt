@@ -61,11 +61,15 @@ fun EntryGridCard(
                     .aspectRatio(if (landscape) 16f / 9f else 2f / 3f)
                     .clip(RoundedCornerShape(18.dp)),
             )
+            // Both badges at the larger size: on the cover they are read from
+            // across a grid of posters rather than off the line they sit in,
+            // and the two corners of a poster have the room for it.
             entry.top250Rank?.let { rank ->
                 MetaChip(
                     text = "#$rank",
                     container = MaterialTheme.colorScheme.primaryContainer,
                     content = MaterialTheme.colorScheme.onPrimaryContainer,
+                    large = true,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(6.dp),
@@ -73,6 +77,7 @@ fun EntryGridCard(
             }
             HdrBadge(
                 entry = entry,
+                large = true,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(6.dp),

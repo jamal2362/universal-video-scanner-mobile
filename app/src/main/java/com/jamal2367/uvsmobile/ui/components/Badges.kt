@@ -27,7 +27,13 @@ import com.jamal2367.uvsmobile.ui.theme.BadgeSdr
 import com.jamal2367.uvsmobile.ui.theme.PillShape
 import com.jamal2367.uvsmobile.util.HdrGroups
 
-/** A small, quiet chip - the kind that sits under a title without shouting. */
+/**
+ * A small, quiet chip - the kind that sits under a title without shouting.
+ *
+ * [large] is for the one place where it has to shout a little: a chip lying on
+ * a poster is read as a mark on a picture rather than as a word in a line, and
+ * at the size that suits a line of text it is a smudge on the artwork.
+ */
 @Composable
 fun MetaChip(
     text: String,
@@ -35,10 +41,15 @@ fun MetaChip(
     container: Color = MaterialTheme.colorScheme.surfaceVariant,
     content: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     outlined: Boolean = false,
+    large: Boolean = false,
 ) {
     Text(
         text = text,
-        style = MaterialTheme.typography.labelSmall,
+        style = if (large) {
+            MaterialTheme.typography.labelMedium
+        } else {
+            MaterialTheme.typography.labelSmall
+        },
         color = content,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -54,7 +65,10 @@ fun MetaChip(
                     Modifier
                 }
             )
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(
+                horizontal = if (large) 9.dp else 8.dp,
+                vertical = if (large) 4.dp else 3.dp,
+            ),
     )
 }
 
@@ -68,10 +82,16 @@ fun MetaChip(
  * which family it belongs to.
  */
 @Composable
-fun HdrBadge(entry: LibraryEntry, modifier: Modifier = Modifier) {
+fun HdrBadge(entry: LibraryEntry, modifier: Modifier = Modifier, large: Boolean = false) {
     val label = hdrLabel(entry) ?: return
     val (container, content) = hdrColors(entry)
-    MetaChip(text = label, container = container, content = content, modifier = modifier)
+    MetaChip(
+        text = label,
+        container = container,
+        content = content,
+        large = large,
+        modifier = modifier,
+    )
 }
 
 /**
