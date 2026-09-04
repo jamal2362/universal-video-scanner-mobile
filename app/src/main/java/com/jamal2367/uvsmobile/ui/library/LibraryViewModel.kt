@@ -15,6 +15,8 @@ import com.jamal2367.uvsmobile.data.prefs.AppSettings
 import com.jamal2367.uvsmobile.data.prefs.LibraryLayout
 import com.jamal2367.uvsmobile.data.remote.ApiFailure
 import com.jamal2367.uvsmobile.data.remote.LiveEvent
+import com.jamal2367.uvsmobile.util.HdrGroup
+import com.jamal2367.uvsmobile.util.HdrGroups
 import com.jamal2367.uvsmobile.util.toUserMessage
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -80,6 +82,16 @@ data class LibraryUiState(
  */
 data class FilterOptions(
     val hdrFormats: List<String> = emptyList(),
+    /**
+     * The grades the library holds, named in full.
+     *
+     * What [hdrFormats] would be if the stored format said anything: it reads
+     * "Dolby Vision" for a profile 5, a profile 8.1 and a profile 7 with a full
+     * enhancement layer alike, so the sheet offers these instead - each one
+     * carrying the field that actually finds it. Empty when the library could
+     * not be read for them, and then the plain formats stand in.
+     */
+    val hdrGroups: List<HdrGroup> = emptyList(),
     val resolutions: List<String> = emptyList(),
     val resolutionClasses: List<String> = emptyList(),
     val videoCodecs: List<String> = emptyList(),
@@ -296,6 +308,25 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         persistNarrowing(updated)
     }
 
+    /**
+     * Several filters as one change of question.
+     *
+     * A grade chosen in the filter sheet clears the two other picture fields as
+     * it is set - one grade at a time - and that has to be a single new query:
+     * three separate ones would be three requests, the first two of them for a
+     * library nobody asked to see.
+     */
+    fun setFilters(values: Map<FilterField, String?>) {
+        val updated = updateQuery { query ->
+            val filters = query.filters.toMutableMap()
+            values.forEach { (field, value) ->
+                if (value.isNullOrBlank()) filters.remove(field) else filters[field] = value
+            }
+            query.copy(filters = filters)
+        }
+        persistNarrowing(updated)
+    }
+
     fun setRange(field: RangeField, range: RangeValue) {
         val updated = updateQuery { query ->
             val ranges = query.ranges.toMutableMap()
@@ -503,8 +534,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
      *
      * Two calls, because the server counts five of the nine filterable fields
      * and not the other four. The counts are the cheap call; the rest are read
-     * off a projection of the library, which is four short strings an entry and
-     * comes back as a 304 on every later open.
+     * off a projection of the library, which is five short strings an entry and
+     * comes back as a 304 on every later open. The same projection is what
+     * names the grades in full - the counted formats cannot, since every Dolby
+     * Vision title is stored under the one word.
      *
      * It matters that these are real values: the API matches a filter exactly,
      * so a typed "Profile 8" finds nothing at all when the stored detail reads
@@ -537,26 +570,36 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 return@launch
             }
 
-            val values = try {
-                repository.distinctValues(LibraryQuery.VALUE_FIELDS)
+            val projection = try {
+                repository.projection(LibraryQuery.VALUE_FIELDS)
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
             } catch (_: Throwable) {
-                // The sheet falls back to a text box for those four fields;
-                // the counted ones are already usable.
-                emptyMap()
+                // The sheet falls back to a text box for those fields; the
+                // counted ones are already usable.
+                null
             }
+
+            val values = projection
+                ?.let { repository.distinctValues(it, LibraryQuery.VALUE_FIELDS) }
+                .orEmpty()
 
             _state.value = _state.value.copy(
                 filterOptions = FilterOptions(
                     // The counts name Dolby Vision by its enhancement layer,
                     // while the filter matches the stored format - so the
-                    // suffix comes off and the layer gets its own field.
+                    // suffix comes off and the layer gets its own field. Only
+                    // ever seen when the projection did not arrive; when it
+                    // did, the grades below say more than these can.
                     hdrFormats = counted.hdrFormats.keys
                         .map { it.substringBefore(" (").trim() }
                         .filter { it.isNotBlank() && it != "Unknown" }
                         .distinct()
                         .sorted(),
+                    hdrGroups = projection
+                        ?.let { HdrGroups.of(it) }
+                        ?.filter { it.label != HdrGroups.UNKNOWN }
+                        .orEmpty(),
                     resolutions = counted.resolutions.keys.filter { it != "Unknown" }.sorted(),
                     resolutionClasses = counted.resolutionClasses.keys.filter { it != "Unknown" },
                     videoCodecs = counted.videoCodecs.keys.filter { it != "Unknown" }.sorted(),
@@ -565,7 +608,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                     elTypes = values["el_type"].orEmpty(),
                     videoEncoders = values["video_encoder"].orEmpty(),
                     cmVersions = values["dv_cm_version"].orEmpty(),
-                    loaded = values.isNotEmpty(),
+                    loaded = projection != null,
                 )
             )
         }

@@ -446,8 +446,8 @@ private fun DetailHeader(entry: LibraryEntry, posterWidth: Int) {
                 entry.top250Rank?.let { rank ->
                     MetaChip(
                         text = stringResource(R.string.rating_top250, rank),
-                        container = MaterialTheme.colorScheme.tertiaryContainer,
-                        content = MaterialTheme.colorScheme.onTertiaryContainer,
+                        container = MaterialTheme.colorScheme.primaryContainer,
+                        content = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
             }

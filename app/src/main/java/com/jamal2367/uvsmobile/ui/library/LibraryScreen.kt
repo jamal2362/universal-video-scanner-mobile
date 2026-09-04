@@ -278,6 +278,7 @@ fun LibraryScreen(
             query = state.query,
             options = state.filterOptions,
             onFilter = viewModel::setFilter,
+            onFilters = viewModel::setFilters,
             onRange = viewModel::setRange,
             onReset = {
                 searchText = ""

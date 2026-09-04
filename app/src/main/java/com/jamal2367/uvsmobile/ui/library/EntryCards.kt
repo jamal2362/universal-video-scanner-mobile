@@ -64,8 +64,8 @@ fun EntryGridCard(
             entry.top250Rank?.let { rank ->
                 MetaChip(
                     text = "#$rank",
-                    container = MaterialTheme.colorScheme.tertiaryContainer,
-                    content = MaterialTheme.colorScheme.onTertiaryContainer,
+                    container = MaterialTheme.colorScheme.primaryContainer,
+                    content = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(6.dp),
@@ -98,7 +98,8 @@ fun EntryGridCard(
             text = listOfNotNull(
                 entry.tmdbYear?.takeIf { it.isNotBlank() },
                 entry.resolutionClass?.takeIf { it.isNotBlank() && it != "Unknown" },
-                Formatters.ratingOutOfTen(entry.imdbRating ?: entry.tmdbRating),
+                Formatters.ratingStarred(entry.imdbRating ?: entry.tmdbRating),
+                Formatters.duration(entry.duration),
             ).joinToString(" · "),
             style = if (landscape) {
                 MaterialTheme.typography.bodyMedium
@@ -124,9 +125,9 @@ private fun wideTileWidth(posterWidth: Int): Int =
  * detail a grid has no space for.
  *
  * Four lines, in the order they are read: the title, the file in one line -
- * year, frame, running time, size - then how it is graded, then its track. Each
- * badge on its own line, so the column fills the height the cover sets rather
- * than leaving a band of empty card under it.
+ * year, frame, rating, running time, size - then how it is graded, then its
+ * track. Each badge on its own line, so the column fills the height the cover
+ * sets rather than leaving a band of empty card under it.
  */
 @Composable
 fun EntryListRow(
@@ -173,6 +174,7 @@ fun EntryListRow(
                     text = listOfNotNull(
                         entry.tmdbYear?.takeIf { it.isNotBlank() },
                         entry.resolution?.takeIf { it.isNotBlank() && it != "Unknown" },
+                        Formatters.ratingStarred(entry.imdbRating ?: entry.tmdbRating),
                         Formatters.duration(entry.duration),
                         Formatters.fileSize(entry.fileSize),
                     ).joinToString(" · "),

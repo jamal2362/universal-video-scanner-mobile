@@ -178,7 +178,7 @@
     <string name="scan_state_done">Abgeschlossen</string>
     <string name="scan_state_cancelled">Abgebrochen</string>
     <string name="scan_state_error">Fehlgeschlagen</string>
-    <string name="scan_start_full">Alles Neue scannen</string>
+    <string name="scan_start_full">Scan starten</string>
     <string name="scan_cancel">Scan stoppen</string>
     <string name="scan_cancelling">Wird gestoppt…</string>
     <string name="scan_started">Scan gestartet</string>

@@ -25,6 +25,7 @@ import com.jamal2367.uvsmobile.ui.theme.BadgeHdr10
 import com.jamal2367.uvsmobile.ui.theme.BadgeHdr10Plus
 import com.jamal2367.uvsmobile.ui.theme.BadgeSdr
 import com.jamal2367.uvsmobile.ui.theme.PillShape
+import com.jamal2367.uvsmobile.util.HdrGroups
 
 /** A small, quiet chip - the kind that sits under a title without shouting. */
 @Composable
@@ -89,7 +90,7 @@ fun hdrLabel(entry: LibraryEntry): String? {
     val detail = entry.hdrDetail?.trim().orEmpty()
     if (format.contains("Dolby Vision", ignoreCase = true)) {
         entry.elType?.trim()?.takeIf { it.isNotEmpty() }?.let { return it.uppercase() }
-        return dolbyVisionProfile(detail) ?: "DV"
+        return HdrGroups.dolbyVisionProfile(detail) ?: "DV"
     }
 
     // The plus is the whole distinction, and the scanner does not always
@@ -98,19 +99,6 @@ fun hdrLabel(entry: LibraryEntry): String? {
     if (detail.contains("HDR10+", ignoreCase = true)) return "HDR10+"
     return format
 }
-
-/**
- * The profile out of a detail line like "Dolby Vision Profile 8.1".
- *
- * Written with the decimal a profile is always spoken with - profile 5 reads
- * "5.0" - so a column of badges lines up rather than mixing "5" with "8.1".
- */
-private fun dolbyVisionProfile(detail: String): String? {
-    val number = PROFILE_PATTERN.find(detail)?.groupValues?.get(1) ?: return null
-    return if (number.contains('.')) number else "$number.0"
-}
-
-private val PROFILE_PATTERN = Regex("""Profile\s+(\d+(?:\.\d+)?)""", RegexOption.IGNORE_CASE)
 
 /**
  * The ground and face a grade is drawn in.

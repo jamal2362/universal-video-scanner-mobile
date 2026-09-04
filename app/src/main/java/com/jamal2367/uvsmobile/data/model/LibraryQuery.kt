@@ -207,23 +207,28 @@ data class LibraryQuery(
 
     companion object {
         /**
+         * The fields read off a projection of the library rather than counted.
+         *
+         * `/library/stats` counts the other filterable fields, but not these -
+         * and they are exactly the ones nobody can type from memory: the API
+         * matches a filter exactly, so "Profile 8" never finds a title whose
+         * detail reads "Dolby Vision Profile 8.1". The format is here too, not
+         * because it is unknown but because the profile only means anything
+         * beside it: the three picture fields together are what name a grade in
+         * full. Asked for on their own with `fields=`, the whole library costs
+         * about 150 bytes an entry, and comes back as a `304` after that.
+         */
+        val VALUE_FIELDS = listOf(
+            "hdr_format", "hdr_detail", "el_type", "video_encoder", "dv_cm_version",
+        )
+
+        /**
          * What a list row actually shows.
          *
          * Asking for these instead of the whole record is the difference
          * between roughly 0.5 kB and 1.7 kB per entry - on a library of two
          * thousand titles, a megabyte less over a mobile connection.
          */
-        /**
-         * The fields whose distinct values the filter sheet offers as chips.
-         *
-         * `/library/stats` counts the other filterable fields, but not these
-         * four - and they are exactly the ones nobody can type from memory:
-         * the API matches a filter exactly, so "Profile 8" never finds a title
-         * whose detail reads "Dolby Vision Profile 8.1". Asked for on their own
-         * with `fields=`, the whole library costs about 150 bytes an entry.
-         */
-        val VALUE_FIELDS = listOf("hdr_detail", "el_type", "video_encoder", "dv_cm_version")
-
         val LIST_FIELDS = listOf(
             "path", "filename", "poster_url", "portrait_url", "tmdb_title", "tmdb_year",
             "resolution", "resolution_class", "hdr_format", "hdr_detail", "el_type",

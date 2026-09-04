@@ -94,13 +94,29 @@ fun StatsScreen(
                     item { SummaryTiles(total = stats.total, totalSize = stats.totalSize) }
 
                     item {
+                        // Counted here where the library could be read for it,
+                        // because the server's own counts file every Dolby
+                        // Vision title under the one word; its counts are what
+                        // is left when that read did not happen.
+                        val groups = state.hdrGroups
+                        val counts = remember(groups, stats.hdrFormats) {
+                            if (groups.isEmpty()) {
+                                stats.hdrFormats
+                            } else {
+                                groups.associate { it.label to it.count }
+                            }
+                        }
                         BreakdownCard(
                             title = stringResource(R.string.stats_hdr_formats),
-                            counts = stats.hdrFormats,
-                            // The counts name Dolby Vision by its enhancement
-                            // layer; the filter matches the stored format, so
-                            // the suffix is what the layer filter gets.
-                            onRowClick = { label -> onHdrRowClick(label, onShowInLibrary) },
+                            counts = counts,
+                            onRowClick = { label ->
+                                val group = groups.firstOrNull { it.label == label }
+                                if (group != null) {
+                                    onShowInLibrary(group.field, group.value)
+                                } else {
+                                    onHdrRowClick(label, onShowInLibrary)
+                                }
+                            },
                         )
                     }
 
@@ -142,6 +158,13 @@ fun StatsScreen(
     }
 }
 
+/**
+ * The narrowing behind one of the server's own HDR rows.
+ *
+ * Only reached when the library could not be read for its grades: those counts
+ * name Dolby Vision by its enhancement layer, and the filter matches the stored
+ * format, so the suffix is what the layer filter gets.
+ */
 private fun onHdrRowClick(label: String, onShowInLibrary: (FilterField, String) -> Unit) {
     val layer = label.substringAfter('(', "").substringBefore(')').trim()
     if (layer.isNotEmpty()) {

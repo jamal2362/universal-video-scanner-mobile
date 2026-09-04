@@ -145,23 +145,27 @@ class ScannerRepository(
     suspend fun stats(): LibraryStats = call { api.stats() }
 
     /**
-     * The distinct values the library holds for a handful of fields.
+     * The whole library cut down to a handful of fields.
      *
-     * Asked for as a projection of the whole library rather than field by
-     * field: the API has no "list the values" endpoint, but `fields=` cuts an
-     * entry down to just these, which is a few hundred bytes per thousand
-     * entries and comes back as a `304` on every later ask.
+     * The API has no "list the values" endpoint, but `fields=` cuts an entry
+     * down to just these, which is a few hundred bytes per thousand entries and
+     * comes back as a `304` on every later ask. Asked for with the same field
+     * list everywhere, so the filter sheet and the statistics screen share one
+     * answer rather than fetching the library twice.
+     */
+    suspend fun projection(fields: List<String>): List<LibraryEntry> = library(
+        query = LibraryQuery(fields = fields, sort = SortOption.FILENAME),
+        limit = null,
+        offset = 0,
+    ).files
+
+    /**
+     * The distinct values a projection holds, per field.
      *
      * Sorted and free of blanks and "Unknown", because this feeds a list of
      * choices - a chip that matches nothing is worse than no chip.
      */
-    suspend fun distinctValues(fields: List<String>): Map<String, List<String>> {
-        val page = library(
-            query = LibraryQuery(fields = fields, sort = SortOption.FILENAME),
-            limit = null,
-            offset = 0,
-        )
-
+    fun distinctValues(entries: List<LibraryEntry>, fields: List<String>): Map<String, List<String>> {
         val readers: Map<String, (LibraryEntry) -> String?> = mapOf(
             "hdr_detail" to { it.hdrDetail },
             "el_type" to { it.elType },
@@ -176,7 +180,7 @@ class ScannerRepository(
 
         return fields.mapNotNull { field ->
             val read = readers[field] ?: return@mapNotNull null
-            val values = page.files
+            val values = entries
                 .mapNotNull { read(it)?.trim() }
                 .filter { it.isNotEmpty() && !it.equals("Unknown", ignoreCase = true) }
                 .distinct()

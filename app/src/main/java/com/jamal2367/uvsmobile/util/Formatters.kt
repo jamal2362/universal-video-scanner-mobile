@@ -60,6 +60,16 @@ object Formatters {
     fun ratingOutOfTen(value: Double?): String? =
         value?.takeIf { it > 0 }?.let { format(it, 1) }
 
+    /**
+     * `★ 8,4` - the same rating, said to be one.
+     *
+     * A bare number in a line that already carries a year, a frame size and a
+     * running time is the one value on it nobody can name at a glance; the star
+     * is what says which of the four it is.
+     */
+    fun ratingStarred(value: Double?): String? =
+        ratingOutOfTen(value)?.let { "★ $it" }
+
     /** `86 %` - a rating out of a hundred. */
     fun percentage(value: Double?): String? =
         value?.takeIf { it > 0 }?.let { "${it.roundToInt()} %" }

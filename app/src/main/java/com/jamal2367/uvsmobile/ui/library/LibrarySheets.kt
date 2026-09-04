@@ -42,6 +42,7 @@ import com.jamal2367.uvsmobile.data.model.RangeUnit
 import com.jamal2367.uvsmobile.data.model.RangeValue
 import com.jamal2367.uvsmobile.data.model.SortOption
 import com.jamal2367.uvsmobile.data.model.SortOrder
+import com.jamal2367.uvsmobile.util.HdrGroup
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -142,6 +143,7 @@ fun FilterSheet(
     query: LibraryQuery,
     options: FilterOptions,
     onFilter: (FilterField, String?) -> Unit,
+    onFilters: (Map<FilterField, String?>) -> Unit,
     onRange: (RangeField, RangeValue) -> Unit,
     onReset: () -> Unit,
     onDismiss: () -> Unit,
@@ -193,6 +195,18 @@ fun FilterSheet(
             )
 
             FilterField.entries.forEach { field ->
+                // The grade is the one field whose stored value is not what
+                // anyone is looking for, so it gets its own row of choices.
+                if (field == FilterField.HDR_FORMAT && options.hdrGroups.isNotEmpty()) {
+                    HdrFilter(
+                        label = stringResource(field.labelRes),
+                        groups = options.hdrGroups,
+                        filters = query.filters,
+                        onSelect = onFilters,
+                    )
+                    return@forEach
+                }
+
                 val values = options.forField(field)
                 when {
                     values.isNotEmpty() -> ChoiceFilter(
@@ -242,6 +256,58 @@ fun FilterSheet(
         }
     }
 }
+
+/**
+ * The grade, chosen by the name it is known under.
+ *
+ * Each chip carries the field that finds it - the detail line for a profile,
+ * the enhancement layer for a FEL or a MEL, the format for the rest - so
+ * picking one clears the other two picture fields as it sets its own. One
+ * grade at a time is what a row of chips promises, and three fields left half
+ * set would quietly narrow the library to nothing.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HdrFilter(
+    label: String,
+    groups: List<HdrGroup>,
+    filters: Map<FilterField, String>,
+    onSelect: (Map<FilterField, String?>) -> Unit,
+) {
+    val cleared = HDR_FIELDS.associateWith { null }
+    val selected = groups.firstOrNull { filters[it.field].equals(it.value, ignoreCase = true) }
+
+    Column(modifier = Modifier.padding(top = 10.dp)) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium)
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            FilterChip(
+                selected = selected == null,
+                onClick = { onSelect(cleared) },
+                label = { Text(stringResource(R.string.filter_any)) },
+            )
+            groups.forEach { group ->
+                FilterChip(
+                    selected = group == selected,
+                    onClick = {
+                        onSelect(
+                            if (group == selected) cleared else cleared + (group.field to group.value)
+                        )
+                    },
+                    label = { Text(group.label) },
+                )
+            }
+        }
+    }
+}
+
+/** The three fields one grade is spread across. */
+private val HDR_FIELDS =
+    listOf(FilterField.HDR_FORMAT, FilterField.HDR_DETAIL, FilterField.EL_TYPE)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
